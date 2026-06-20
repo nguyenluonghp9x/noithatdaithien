@@ -195,6 +195,16 @@
   #btnCart{position:relative}
   .cbadge{background:#fff;color:var(--orange-d);font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 4px;margin-left:4px}
 
+  /* showroom / bản đồ */
+  .mapsec{display:grid;grid-template-columns:1fr 1.3fr;gap:30px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:36px;margin-bottom:50px}
+  .mapinfo .eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-d);font-weight:700;margin-bottom:11px}
+  .mapinfo h2{font-family:var(--disp);font-size:27px;margin:0 0 16px;font-weight:700}
+  .mapinfo p{display:flex;align-items:center;gap:10px;color:var(--ink);margin:8px 0;font-size:14px}
+  .mapinfo p svg.ico{color:var(--gold-d);flex:none}
+  .mapframe{border-radius:12px;overflow:hidden;border:1px solid var(--line2);height:330px}
+  .mapframe iframe{width:100%;height:100%;border:0;display:block}
+  @media(max-width:760px){.mapsec{grid-template-columns:1fr;padding:24px;gap:20px}.mapframe{height:260px}.mapinfo h2{font-size:23px}}
+
   /* footer */
   #footer{display:none;background:var(--ink);color:#C7BBAD;margin-top:56px;border-top:2px solid var(--orange)}
   body.shopping #footer{display:block}
@@ -449,6 +459,7 @@ const DEFSET={
   phone:'0900000000', zalo:'', address:'590 Thiên Lôi, An Biên, Hải Phòng',
   note:'Liên hệ để được tư vấn & báo giá tốt nhất.',
   showPrice:true, ownerPin:'0000', appsScriptUrl:'',
+  map:'', // tên/địa chỉ địa điểm trên Google Maps (để trống = tự dùng tên shop + địa chỉ)
   bank:{bin:'',acc:'',name:''},
   hero:{eyebrow:'', title:'', desc:'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn. Mua sắm dễ dàng cho phòng khách, phòng ngủ, phòng ăn và hơn thế nữa.', btn:'Khám phá sản phẩm', image:''},
   ann:{show:true, text:'An toàn sức khỏe · Giao lắp tận nơi · Bảo hành dài hạn'},
@@ -685,6 +696,9 @@ function stockState(p){
 }
 function zaloLink(){const z=(settings.zalo||'').trim();if(z)return /^https?:/i.test(z)?z:'https://zalo.me/'+z.replace(/[^\d]/g,'');const ph=(settings.phone||'').replace(/[^\d]/g,'');return ph?'https://zalo.me/'+ph:'#';}
 const telLink=()=>'tel:'+(settings.phone||'').replace(/[^\s\d+]/g,'');
+function mapQuery(){return ((settings.map&&settings.map.trim())||((settings.shop||'')+' '+(settings.address||''))).trim();}
+function mapEmbed(){return 'https://maps.google.com/maps?q='+encodeURIComponent(mapQuery())+'&z=16&hl=vi&output=embed';}
+function mapDir(){return 'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(mapQuery());}
 
 function catCounts(){const c={__all:products.length,__none:0};cats.forEach(x=>c[x]=0);
   products.forEach(p=>{if(p.cat&&cats.includes(p.cat))c[p.cat]=(c[p.cat]||0)+1;else c.__none++;});return c;}
@@ -774,6 +788,21 @@ function trustHTML(){
 function secHTML(icon,title,arr){
   return `<div class="sec"><div class="sechead"><h2>${svgIcon(icon,21)} ${title}</h2></div><div class="grid">${arr.map(shopCard).join('')}</div></div>`;
 }
+function mapHTML(){
+  if(!(settings.address||settings.map))return '';
+  const hours=settings.footer&&settings.footer.hours;
+  return `<div class="mapsec">
+    <div class="mapinfo">
+      <div class="eyebrow">Ghé thăm showroom</div>
+      <h2>${esc(settings.shop)}</h2>
+      ${settings.address?`<p>${svgIcon('pin',17)} ${esc(settings.address)}</p>`:''}
+      ${settings.phone?`<p>${svgIcon('phone',16)} ${esc(settings.phone)}</p>`:''}
+      ${hours?`<p>${svgIcon('clock',16)} Giờ mở cửa: ${esc(hours)}</p>`:''}
+      <a class="btn" href="${mapDir()}" target="_blank" rel="noopener" style="width:auto;display:inline-flex;align-items:center;gap:8px;margin-top:16px">${svgIcon('pin',16)} Chỉ đường trên Google Maps</a>
+    </div>
+    <div class="mapframe"><iframe src="${mapEmbed()}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Bản đồ ${esc(settings.shop)}"></iframe></div>
+  </div>`;
+}
 function renderShop(){
   const c=catCounts();const sold=window._sold=soldMap();
   const homepage=(active==='__all'&&!search);
@@ -796,6 +825,7 @@ function renderShop(){
       <span class="muted">${list.length} sản phẩm</span></div>
     <div class="grid" id="grid"></div>
   </div>`;
+  html+=mapHTML();
   $('#view').innerHTML=html;
   $('#grid').innerHTML=list.length?list.map(shopCard).join(''):`<div class="empty" style="grid-column:1/-1">Không có sản phẩm trong mục này.</div>`;
   $('#view').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{active=b.dataset.cat;renderShop();window.scrollTo({top:0,behavior:'smooth'});});
@@ -1154,6 +1184,10 @@ function renderGiaodien(){
            <div class="setrow"><label>TikTok (link)</label><input id="gTiktok" value="${esc(f.tiktok)}"></div></div>
          <div class="setrow"><label>Chính sách (mỗi dòng 1 mục)</label><textarea id="gPolicies" rows="4">${esc(f.policies)}</textarea></div>
        </div>
+       <div class="card" style="margin-top:18px"><h3>🗺️ Bản đồ Google Maps</h3>
+         <div class="setrow"><label>Tên / địa chỉ địa điểm (để hiện đúng trên bản đồ)</label><input id="gMap" value="${esc(settings.map||'')}" placeholder="${esc((settings.shop||'')+' '+(settings.address||''))}"></div>
+         <p class="hint">Để trống = tự dùng tên shop + địa chỉ. Nên ghi đúng tên địa điểm bạn đã tạo trên Google Maps (vd: “Nội Thất Đại Thiên, 590 Thiên Lôi, Hải Phòng”).</p>
+       </div>
      </div>
    </div>
    <div style="max-width:320px;margin-top:18px"><button class="btn" id="gSave">Lưu giao diện</button></div>`;
@@ -1164,6 +1198,7 @@ function renderGiaodien(){
     Object.assign(settings.ann,{show:$('#gAnnShow').checked,text:$('#gAnnText').value.trim()});
     $('#gTrust').querySelectorAll('input').forEach(inp=>{const i=+inp.dataset.ti,k=inp.dataset.tk;if(settings.trust[i])settings.trust[i][k]=inp.value;});
     Object.assign(settings.footer,{about:$('#gAbout').value.trim(),email:$('#gEmail').value.trim(),hours:$('#gHours').value.trim(),fb:$('#gFb').value.trim(),yt:$('#gYt').value.trim(),ig:$('#gIg').value.trim(),tiktok:$('#gTiktok').value.trim(),policies:$('#gPolicies').value});
+    settings.map=$('#gMap').value.trim();
     await saveSet();renderBrand();toast('Đã lưu giao diện · bấm "Xem trang bán hàng" để kiểm tra');
   };
 }
