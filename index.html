@@ -363,7 +363,7 @@ $('#dlg').addEventListener('click',e=>{if(e.target.id==='dlg')closeDlg();});
 /* ====================== KẾT NỐI SUPABASE (dữ liệu dùng chung nhiều máy) ====================== */
 const SUPA_URL='https://xviquvravscpionqundn.supabase.co';
 const SUPA_KEY='sb_publishable_tWLZKvpeoXrm1eApB1vDtA_KkwwMdeE';
-const LOCAL_KEYS=['dt:cart','dt:buyer']; // các khóa LUÔN lưu cục bộ theo từng máy/khách
+const LOCAL_KEYS=['dt:cart','dt:buyer','dt:orders']; // các khóa LUÔN lưu cục bộ theo từng máy/khách
 
 /* ====================== LƯU TRỮ (Supabase nếu có cấu hình, ngược lại localStorage) ====================== */
 const DB=(()=>{
@@ -395,7 +395,21 @@ const DB=(()=>{
         catch(e){console.warn('Supabase set lỗi ('+k+'):',e.message||e);lsSet(k,val);return;}
       }
       lsSet(k,val);
-    }
+    },
+    /* ----- Xác thực (Supabase Auth) ----- */
+    async currentEmail(){if(!useSupa)return null;try{const {data}=await sb.auth.getUser();return data&&data.user?data.user.email:null;}catch(e){return null;}},
+    async signIn(email,password){if(!useSupa)return{error:{message:'Chưa kết nối máy chủ'}};return await sb.auth.signInWithPassword({email,password});},
+    async signOut(){if(useSupa){try{await sb.auth.signOut();}catch(e){}}},
+    async updatePassword(password){if(!useSupa)return{error:{message:'Chưa kết nối'}};return await sb.auth.updateUser({password});},
+    // Tạo tài khoản nhân viên KHÔNG làm rớt phiên của chủ (dùng client tạm, không lưu phiên)
+    async signUpAux(email,password){
+      if(!useSupa)return{error:{message:'Chưa kết nối'}};
+      try{const tmp=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:false,autoRefreshToken:false,storageKey:'sb-aux'}});
+        const r=await tmp.auth.signUp({email,password});return r;}
+      catch(e){return{error:{message:e.message||String(e)}};}
+    },
+    // Tài khoản chủ đầu tiên: signUp trên client chính (để đăng nhập luôn)
+    async signUpPrimary(email,password){if(!useSupa)return{error:{message:'Chưa kết nối'}};return await sb.auth.signUp({email,password});}
   };
 })();
 
@@ -459,6 +473,15 @@ function applySettings(raw){
   settings.footer=Object.assign({},DEFSET.footer,settings.footer||{});
   if(!Array.isArray(settings.trust)||!settings.trust.length)settings.trust=DEFSET.trust.map(x=>({...x}));
 }
+function staffByEmail(email){return email?staff.find(s=>s.email&&s.email.toLowerCase()===email.toLowerCase()):null;}
+async function restoreSession(){
+  session.staff=null;
+  const email=await DB.currentEmail();
+  if(!email)return;
+  const p=staffByEmail(email);
+  if(p&&p.active!==false)session.staff=p;
+  else session.authEmail=email; // đã đăng nhập Auth nhưng chưa có hồ sơ/đang khóa
+}
 async function reloadShared(){
   const p=await DB.get('dt:products'); if(p)products=p;
   const c=await DB.get('dt:cats'); if(c)cats=c;
@@ -493,22 +516,10 @@ async function load(){
   else cats=await DB.get('dt:cats')||[];
   vouchers=await DB.get('dt:vouchers')||[];
   orders=await DB.get('dt:orders')||[];
-  staff=await DB.get('dt:staff');
+  staff=await DB.get('dt:staff')||[];
   applySettings(await DB.get('dt:settings'));
-  if(!staff||!staff.length){
-    staff=[{id:uid(),name:'Chủ cửa hàng',username:'admin',role:'Chủ',passHash:await hashPass('0000'),perms:permObj(ROLE_PRESET['Chủ']),active:true}];
-    await DB.set('dt:staff',staff);
-  }else{
-    // Nâng cấp tài khoản cũ: bảo đảm có username + đổi PIN thành mật khẩu mã hóa
-    let changed=false;const used=new Set();
-    for(const s of staff){
-      if(!s.username){s.username=(s.role==='Chủ'?'admin':makeUsername(s.name));changed=true;}
-      let u=s.username,n=1;while(used.has(u)){u=s.username+(++n);} s.username=u;used.add(u);
-      if(!s.passHash&&s.pin!=null){s.passHash=await hashPass(String(s.pin));delete s.pin;changed=true;}
-    }
-    if(changed)await DB.set('dt:staff',staff);
-  }
-  defHint=await checkPass('0000',staff.find(s=>(s.username||'')==='admin'));
+  // Tài khoản dùng Supabase Auth (email+mật khẩu). Chủ tự tạo ở màn hình đăng nhập lần đầu.
+  await restoreSession();
   cart=await DB.get('dt:cart')||{};
   buyer=Object.assign({name:'',phone:'',address:'',note:''},await DB.get('dt:buyer')||{});
   // bổ sung danh mục từ sản phẩm
@@ -565,7 +576,7 @@ function renderTopAct(){
         <button id="tRestore" title="Nạp file sao lưu">↥ Khôi phục</button>
         <span class="userchip"><span class="av">${esc(initials(session.staff.name))}</span>${esc(session.staff.name)}
         <button id="tLogout" title="Đăng xuất" style="border:0;background:rgba(255,255,255,.14);border-radius:50%;width:24px;height:24px;padding:0;color:#fff">⎋</button></span>`;
-      $('#tLogout').onclick=()=>{session.staff=null;renderTopAct();renderTabs();renderView();};
+      $('#tLogout').onclick=async()=>{await DB.signOut();session.staff=null;session.authEmail=null;renderTopAct();renderTabs();renderView();};
       $('#tBackup').onclick=backup;$('#tRestore').onclick=()=>$('#fileIn').click();
     }else t.innerHTML='';
   }
@@ -609,28 +620,61 @@ function renderView(){
   if(tab==='caidat')return renderCaidat();
 }
 
-/* ====================== ĐĂNG NHẬP ====================== */
+/* ====================== ĐĂNG NHẬP (Supabase Auth: email + mật khẩu) ====================== */
 function renderLogin(){
+  const hasOwner=staff.some(s=>s.email);
+  if(!hasOwner)return renderFirstRun();
   $('#view').innerHTML=`<div class="login">
     <div class="blogo">${esc(brandMark(settings.shop))}</div>
     <h2>Đăng nhập quản trị</h2>
-    <p>Khu vực dành cho nhân viên. Vui lòng đăng nhập bằng tài khoản được cấp.</p>
-    <div class="setrow" style="text-align:left"><label>Tên đăng nhập</label><input id="lgUser" autocomplete="username" placeholder="VD: admin"></div>
+    <p>Khu vực nhân viên. Đăng nhập bằng email &amp; mật khẩu được cấp.</p>
+    <div class="setrow" style="text-align:left"><label>Email</label><input id="lgEmail" type="email" autocomplete="username" placeholder="email@..."></div>
     <div class="setrow" style="text-align:left"><label>Mật khẩu</label><input id="lgPass" type="password" autocomplete="current-password" placeholder="••••••"></div>
     <button class="btn" id="lgBtn" style="margin-top:6px">Đăng nhập</button>
-    ${defHint?'<p class="hint">Lần đầu: tài khoản <b>admin</b> · mật khẩu <b>0000</b> (đổi ngay trong tab Cài đặt sau khi vào).</p>':''}
   </div>`;
-  const go=()=>doLogin($('#lgUser').value.trim(),$('#lgPass').value);
+  const go=()=>doLogin($('#lgEmail').value.trim(),$('#lgPass').value);
   $('#lgBtn').onclick=go;
   $('#lgPass').onkeydown=e=>{if(e.key==='Enter')go();};
-  $('#lgUser').onkeydown=e=>{if(e.key==='Enter')$('#lgPass').focus();};
-  setTimeout(()=>$('#lgUser').focus(),40);
+  $('#lgEmail').onkeydown=e=>{if(e.key==='Enter')$('#lgPass').focus();};
+  setTimeout(()=>$('#lgEmail').focus(),40);
 }
-async function doLogin(username,password){
-  if(!username){toast('Nhập tên đăng nhập');return;}
-  const s=staff.find(x=>x.active!==false&&(x.username||'').toLowerCase()===username.toLowerCase());
-  if(!s||!(await checkPass(password,s))){toast('Sai tài khoản hoặc mật khẩu');return;}
-  session.staff=s;tab='';renderTopAct();renderTabs();renderView();toast('Xin chào '+s.name);
+function renderFirstRun(){
+  $('#view').innerHTML=`<div class="login">
+    <div class="blogo">${esc(brandMark(settings.shop))}</div>
+    <h2>Tạo tài khoản quản trị</h2>
+    <p>Lần đầu thiết lập — tạo tài khoản Chủ cửa hàng (toàn quyền). Dùng email thật của bạn.</p>
+    <div class="setrow" style="text-align:left"><label>Họ tên</label><input id="frName" placeholder="VD: Nguyễn Văn A" value="Chủ cửa hàng"></div>
+    <div class="setrow" style="text-align:left"><label>Email</label><input id="frEmail" type="email" placeholder="email@gmail.com"></div>
+    <div class="setrow" style="text-align:left"><label>Mật khẩu (≥ 6 ký tự)</label><input id="frPass" type="password" placeholder="••••••"></div>
+    <button class="btn" id="frBtn" style="margin-top:6px">Tạo &amp; đăng nhập</button>
+    <p class="hint">Tài khoản này dùng để đăng nhập quản trị về sau.</p>
+  </div>`;
+  $('#frBtn').onclick=createOwner;
+  setTimeout(()=>$('#frEmail').focus(),40);
+}
+async function doLogin(email,password){
+  if(!email||!password){toast('Nhập email và mật khẩu');return;}
+  toast('Đang đăng nhập...');
+  const {data,error}=await DB.signIn(email,password);
+  if(error){toast(/invalid|credential/i.test(error.message)?'Sai email hoặc mật khẩu':('Lỗi: '+error.message));return;}
+  await reloadShared();
+  const p=staffByEmail(email);
+  if(!p||p.active===false){await DB.signOut();toast('Email này chưa được cấp quyền quản trị');return;}
+  session.staff=p;tab='';renderTopAct();renderTabs();renderView();toast('Xin chào '+p.name);
+}
+async function createOwner(){
+  const name=($('#frName').value||'Chủ cửa hàng').trim();
+  const email=$('#frEmail').value.trim();const pass=$('#frPass').value;
+  if(!/.+@.+\..+/.test(email)){toast('Nhập email hợp lệ');return;}
+  if(pass.length<6){toast('Mật khẩu tối thiểu 6 ký tự');return;}
+  toast('Đang tạo tài khoản...');
+  const {data,error}=await DB.signUpPrimary(email,pass);
+  if(error){toast('Lỗi tạo tài khoản: '+error.message);return;}
+  if(!data||!data.session){toast('Cần TẮT "Confirm email" trong Supabase rồi thử lại (tài khoản chưa kích hoạt được).');return;}
+  const owner={id:uid(),email:email.toLowerCase(),name,role:'Chủ',perms:permObj(ROLE_PRESET['Chủ']),active:true};
+  staff=[owner];
+  await saveStaff();
+  session.staff=owner;tab='';renderTopAct();renderTabs();renderView();toast('Đã tạo tài khoản chủ · Xin chào '+name);
 }
 
 /* ====================== CỬA HÀNG (KHÁCH) ====================== */
@@ -1127,10 +1171,10 @@ function renderGiaodien(){
 /* ====================== QUẢN TRỊ: NHÂN VIÊN & PHÂN QUYỀN ====================== */
 function renderNhanvien(){
   $('#view').innerHTML=`<h2>Nhân viên & phân quyền</h2>
-    <div class="sectitle"><p class="muted" style="margin:0">Mỗi nhân viên đăng nhập bằng <b>tài khoản + mật khẩu</b> riêng. Mật khẩu được mã hóa khi lưu. Chọn vai trò để áp quyền gợi ý.</p>
+    <div class="sectitle"><p class="muted" style="margin:0">Mỗi nhân viên đăng nhập bằng <b>email + mật khẩu</b> riêng (bảo mật bởi máy chủ Supabase). Chọn vai trò để áp quyền gợi ý.</p>
       <button class="btn sm" id="addStaff">+ Thêm nhân viên</button></div>
-    <div class="card"><table><thead><tr><th>Tên</th><th>Tài khoản</th><th>Vai trò</th><th>Quyền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
-    ${staff.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td class="muted">${esc(s.username||'—')}</td><td>${esc(s.role)}</td>
+    <div class="card"><table><thead><tr><th>Tên</th><th>Email</th><th>Vai trò</th><th>Quyền</th><th>Trạng thái</th><th></th></tr></thead><tbody>
+    ${staff.map(s=>`<tr><td><b>${esc(s.name)}</b></td><td class="muted">${esc(s.email||'—')}</td><td>${esc(s.role)}</td>
       <td class="muted">${PERMS.filter(([k])=>s.perms&&s.perms[k]).length}/${PERMS.length} quyền</td>
       <td>${s.active===false?'<span class="pill huy">Tạm khóa</span>':'<span class="pill xong">Hoạt động</span>'}</td>
       <td class="right"><button class="btn sm alt" data-edit="${s.id}">Sửa</button> ${staff.length>1?`<button class="btn sm danger" data-del="${s.id}">Xóa</button>`:''}</td></tr>`).join('')}
@@ -1140,19 +1184,20 @@ function renderNhanvien(){
   $('#view').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('Xóa nhân viên?','Tài khoản này sẽ không đăng nhập được nữa.')){staff=staff.filter(s=>s.id!==b.dataset.del);await saveStaff();renderNhanvien();}});
 }
 function editStaff(id){
-  const s=id?staff.find(x=>x.id===id):{name:'',username:'',role:'NV bán hàng',perms:permObj(ROLE_PRESET['NV bán hàng']),active:true};
+  const s=id?staff.find(x=>x.id===id):{name:'',email:'',role:'NV bán hàng',perms:permObj(ROLE_PRESET['NV bán hàng']),active:true};
   const cur=JSON.parse(JSON.stringify(s.perms||{}));
   $('#ovContent').innerHTML=`<div class="mbody">
     <h2 style="margin-bottom:14px">${id?'Sửa nhân viên':'Thêm nhân viên'}</h2>
-    <div class="row"><div class="setrow"><label>Họ tên *</label><input id="sName" value="${esc(s.name)}"></div>
-      <div class="setrow"><label>Tên đăng nhập *</label><input id="sUser" value="${esc(s.username||'')}" placeholder="vd: nhanvien1" autocomplete="off"></div></div>
-    <div class="row"><div class="setrow"><label>Mật khẩu ${id?'(để trống nếu giữ nguyên)':'*'}</label><input id="sPass" type="text" value="" placeholder="${id?'••••••':'đặt mật khẩu'}" autocomplete="new-password"></div>
+    <div class="setrow"><label>Họ tên *</label><input id="sName" value="${esc(s.name)}"></div>
+    <div class="row"><div class="setrow"><label>Email đăng nhập *</label><input id="sEmail" type="email" value="${esc(s.email||'')}" ${id?'readonly style="background:var(--cream);color:var(--muted)"':''} placeholder="email@..."></div>
       <div class="setrow"><label>Trạng thái</label><select id="sActive"><option value="1" ${s.active!==false?'selected':''}>Hoạt động</option><option value="0" ${s.active===false?'selected':''}>Tạm khóa</option></select></div></div>
+    ${id?'':`<div class="setrow"><label>Mật khẩu (≥ 6 ký tự) *</label><input id="sPass" type="text" value="" placeholder="đặt mật khẩu cho nhân viên"></div>`}
     <label>Vai trò (bấm để áp quyền gợi ý)</label>
     <div class="roletabs" id="roletabs">${Object.keys(ROLE_PRESET).map(r=>`<button class="roletab ${r===s.role?'on':''}" data-r="${esc(r)}">${esc(r)}</button>`).join('')}</div>
     <label style="margin-top:6px">Quyền chi tiết (tùy chỉnh tự do)</label>
     <div class="permgrid" id="permgrid">${PERMS.map(([k,l])=>`<label class="permrow"><input type="checkbox" data-p="${k}" ${cur[k]?'checked':''}><span class="pn">${esc(l)}</span></label>`).join('')}</div>
     <div class="row" style="margin-top:16px"><button class="btn" id="sSave">Lưu nhân viên</button><button class="btn alt" id="sCancel" style="flex:0 0 110px">Hủy</button></div>
+    ${id?'<p class="hint">Mật khẩu do nhân viên tự đổi (tab Cài đặt sau khi đăng nhập).</p>':''}
   </div>`;
   $('#ov').classList.add('show');
   let role=s.role;
@@ -1162,18 +1207,24 @@ function editStaff(id){
   });
   $('#sCancel').onclick=closeOv;
   $('#sSave').onclick=async()=>{
-    const name=$('#sName').value.trim(),username=$('#sUser').value.trim().toLowerCase().replace(/\s+/g,''),pass=$('#sPass').value;
+    const name=$('#sName').value.trim();
     if(!name){toast('Nhập họ tên');return;}
-    if(!username){toast('Nhập tên đăng nhập');return;}
-    if(staff.some(x=>x.id!==id&&(x.username||'').toLowerCase()===username)){toast('Tên đăng nhập đã tồn tại');return;}
-    if(!id&&!pass){toast('Đặt mật khẩu cho nhân viên mới');return;}
     const perms={};$('#permgrid').querySelectorAll('[data-p]').forEach(c=>perms[c.dataset.p]=c.checked);
-    const data={name,username,role,active:$('#sActive').value==='1',perms};
-    if(pass)data.passHash=await hashPass(pass);
-    if(id){const t=staff.find(x=>x.id===id);Object.assign(t,data);delete t.pin;}
-    else staff.push({id:uid(),...data});
-    await saveStaff();closeOv();toast('Đã lưu nhân viên');renderNhanvien();
-    if(session.staff&&id===session.staff.id){session.staff=staff.find(x=>x.id===id);renderTabs();}
+    if(id){
+      const t=staff.find(x=>x.id===id);Object.assign(t,{name,role,active:$('#sActive').value==='1',perms});
+      await saveStaff();closeOv();toast('Đã lưu nhân viên');renderNhanvien();
+      if(session.staff&&id===session.staff.id){session.staff=t;renderTabs();renderView();}
+    }else{
+      const email=$('#sEmail').value.trim().toLowerCase();const pass=$('#sPass').value;
+      if(!/.+@.+\..+/.test(email)){toast('Nhập email hợp lệ');return;}
+      if(staff.some(x=>x.email&&x.email.toLowerCase()===email)){toast('Email này đã có nhân viên');return;}
+      if(pass.length<6){toast('Mật khẩu tối thiểu 6 ký tự');return;}
+      toast('Đang tạo tài khoản...');
+      const {error}=await DB.signUpAux(email,pass);
+      if(error){toast('Lỗi: '+(/registered|exist/i.test(error.message)?'Email đã được đăng ký':error.message));return;}
+      staff.push({id:uid(),email,name,role,active:$('#sActive').value==='1',perms});
+      await saveStaff();closeOv();toast('Đã thêm nhân viên');renderNhanvien();
+    }
   };
 }
 
@@ -1203,8 +1254,8 @@ function renderCaidat(){
           <p class="hint">Điền để khách quét QR chuyển khoản khi đặt hàng.</p>
         </div>
         <div class="card" style="margin-bottom:18px"><h3>Bảo mật</h3>
-          <p class="hint" style="margin:0 0 8px">Đang đăng nhập: <b>${esc(session.staff?session.staff.name:'')}</b> · tài khoản <b>${esc(session.staff?session.staff.username:'')}</b></p>
-          <div class="setrow"><label>Đổi mật khẩu tài khoản này</label><input id="cPass" type="text" placeholder="Để trống nếu không đổi" autocomplete="new-password"></div>
+          <p class="hint" style="margin:0 0 8px">Đang đăng nhập: <b>${esc(session.staff?session.staff.name:'')}</b> · <b>${esc(session.staff?session.staff.email:'')}</b></p>
+          <div class="setrow"><label>Đổi mật khẩu tài khoản này (≥ 6 ký tự)</label><input id="cPass" type="text" placeholder="Để trống nếu không đổi"></div>
         </div>
         <div class="card"><h3>Kết nối nâng cao (tùy chọn)</h3>
           <div class="setrow"><label>URL Google Apps Script (gửi đơn về Sheet/email)</label><input id="cAppsUrl" value="${esc(settings.appsScriptUrl)}" placeholder="https://script.google.com/.../exec"></div>
@@ -1219,7 +1270,7 @@ function renderCaidat(){
       showPrice:$('#cShowPrice').checked,appsScriptUrl:$('#cAppsUrl').value.trim(),
       bank:{bin:$('#cBank').value,acc:$('#cAcc').value.trim(),name:$('#cAccName').value.trim()}});
     const np=$('#cPass').value;
-    if(np&&session.staff){const h=await hashPass(np);session.staff.passHash=h;delete session.staff.pin;const st=staff.find(x=>x.id===session.staff.id);if(st){st.passHash=h;delete st.pin;}await saveStaff();}
+    if(np){if(np.length<6){toast('Mật khẩu mới phải ≥ 6 ký tự');return;}const {error}=await DB.updatePassword(np);if(error){toast('Đổi mật khẩu lỗi: '+error.message);return;}toast('Đã đổi mật khẩu');}
     await saveSet();renderBrand();toast('Đã lưu cài đặt');renderCaidat();
   };
 }
