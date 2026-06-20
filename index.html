@@ -24,15 +24,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --orange:#E2611E;--orange-d:#BE4D13;--orange-l:#F6E9DD;
-    --ink:#15100C;--ink2:#241C15;--muted:#9A8B7C;
-    --line:#EBE4D9;--line2:#DBD0C1;--bg:#F1EBE1;--panel:#FFFFFF;--cream:#FBF7F0;
-    --ok:#1F7A4D;--warn:#B6791F;--sale:#C8341D;--gold:#B0894A;--gold-d:#8C6A34;--zalo:#0068FF;
-    --ui:'Be Vietnam Pro',system-ui,sans-serif;--disp:'Lora',Georgia,serif;
-    --r:9px;--r-sm:6px;--shadow:0 1px 2px rgba(21,16,12,.04),0 16px 38px rgba(21,16,12,.07);
+    /* Bảng "Warm Minimalist" — Nội Thất Đại Thiên */
+    --terra:#C89F82;                                   /* đất nung (trang trí) */
+    --orange:#AE7552;--orange-d:#965F3E;--orange-l:#EFE3D6; /* đất nung đậm (nút/điểm nhấn) */
+    --sage:#A3B18A;--sage-d:#7E8C66;                   /* xanh sage */
+    --ink:#2E342B;--ink2:#3D453A;--muted:#8C857A;      /* xanh than (chữ) */
+    --green:#366336;
+    --line:#E8E0D4;--line2:#D9CFBF;--bg:#F5EFE6;--panel:#FFFFFF;--cream:#FAF5EC;--cotton:#F8F8F8;
+    --ok:#4F7A4F;--warn:#B6791F;--sale:#B45339;--gold:#9AA87E;--gold-d:#7E8C66;--zalo:#0068FF;
+    --ui:'Be Vietnam Pro',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif;
+    --r:9px;--r-sm:6px;--shadow:0 1px 2px rgba(46,52,43,.05),0 16px 38px rgba(46,52,43,.08);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:14px;line-height:1.5}
@@ -43,10 +47,10 @@
 
   /* ---------- APP BAR (gộp topbar + subnav thành 1 khối sticky) ---------- */
   .appbar{position:sticky;top:0;z-index:40}
-  .topbar{background:var(--ink);color:#fff;border-bottom:1px solid rgba(176,137,74,.42)}
+  .topbar{background:var(--ink);color:#fff;border-bottom:1px solid rgba(163,177,138,.45)}
   .topbar .in{max-width:1200px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:16px}
   .brand{display:flex;align-items:center;gap:13px;cursor:pointer;flex:none;min-width:0}
-  .blogo{width:44px;height:44px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.02em;color:#fff;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 4px 14px rgba(226,97,30,.32)}
+  .blogo{width:44px;height:44px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.02em;color:#fff;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 4px 14px rgba(174,117,82,.32)}
   .bnames{min-width:0;display:flex;flex-direction:column}
   .bnames b{font-family:var(--disp);font-size:18px;font-weight:700;line-height:1.12;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bnames .sub{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -121,7 +125,7 @@
   .sectitle{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 
   /* ---------- CỬA HÀNG (khách) — phong cách hiện đại ---------- */
-  body.shopping{background:#FAF6EF}
+  body.shopping{background:#F5EFE6}
   svg.ico{display:inline-block;vertical-align:-.16em;flex:none}
   .trust .t .ic svg.ico,.sechead h2 svg.ico{color:var(--gold)}
   .catcard .ic svg.ico{color:var(--ink)}
@@ -131,9 +135,9 @@
   .annbar .in{max-width:1200px;margin:0 auto;padding:7px 20px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;text-align:center}
   .annbar b{color:var(--orange)}
 
-  .hero{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(125% 150% at 82% 8%,#3A2B20 0%,#1C1610 52%,#15100C 100%);color:#fff;padding:62px 54px;margin:4px 0 36px;min-height:336px;display:flex;flex-direction:column;justify-content:center;border:1px solid rgba(176,137,74,.22)}
-  .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(95deg,rgba(226,97,30,.14),transparent 58%);pointer-events:none}
-  .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(176,137,74,.2);border-radius:50%;box-shadow:0 0 0 30px rgba(176,137,74,.05)}
+  .hero{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(125% 150% at 82% 8%,#3F4937 0%,#2A3026 52%,#222820 100%);color:#fff;padding:62px 54px;margin:4px 0 36px;min-height:336px;display:flex;flex-direction:column;justify-content:center;border:1px solid rgba(163,177,138,.25)}
+  .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(95deg,rgba(200,159,130,.2),transparent 58%);pointer-events:none}
+  .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(163,177,138,.22);border-radius:50%;box-shadow:0 0 0 30px rgba(163,177,138,.06)}
   .hero.has-img::after{display:none}
   .bannerprev{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line2);aspect-ratio:21/8;background:#F0E9DF url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22/>') center/cover;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
   .bannerprev img{width:100%;height:100%;object-fit:cover}
@@ -1133,9 +1137,9 @@ function printTags(ids){
   const tags=ids.map(id=>{const p=prod(id);const hasSale=p.salePrice&&p.salePrice<p.price;
     return `<div style="border:1px solid #333;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;page-break-inside:avoid">
       <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#888">${esc(settings.shop)}</div>
-      <div style="font-family:'Lora',serif;font-weight:700;font-size:17px;margin:3px 0">${esc(p.name)}</div>
+      <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;margin:3px 0">${esc(p.name)}</div>
       <div style="font-size:11px;color:#666">Mã: ${esc(p.sku||'—')}${p.size?' · '+esc(p.size):''}</div>
-      <div style="margin-top:6px"><span style="font-size:20px;font-weight:800;color:#C24E14">${fmt(sellPrice(p))}</span>${hasSale?` <span style="text-decoration:line-through;color:#999;font-size:13px">${fmt(p.price)}</span>`:''}</div></div>
+      <div style="margin-top:6px"><span style="font-size:20px;font-weight:800;color:#965F3E">${fmt(sellPrice(p))}</span>${hasSale?` <span style="text-decoration:line-through;color:#999;font-size:13px">${fmt(p.price)}</span>`:''}</div></div>
       <div style="width:74px;height:74px;flex:none">${qrSvg('SP:'+(p.sku||p.id)+'|'+p.name)}</div>
     </div>`;}).join('');
   $('#printArea').innerHTML=`<div class="tags" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px">${tags}</div>`;
@@ -1314,7 +1318,7 @@ function renderCaidat(){
 function printVoucher(v){
   const title=v.type==='ban'?'PHIẾU BÁN HÀNG':v.type==='nhap'?'PHIẾU NHẬP KHO':'PHIẾU XUẤT KHO';
   $('#printArea').innerHTML=`<div class="pv" style="max-width:620px;margin:0 auto;padding:14px">
-    <div style="text-align:center;margin-bottom:6px"><div style="font-family:'Lora',serif;font-size:20px;font-weight:700">${esc(settings.shop)}</div>
+    <div style="text-align:center;margin-bottom:6px"><div style="font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700">${esc(settings.shop)}</div>
     <div style="font-size:12px;color:#555">${esc(settings.address||'')}${settings.phone?' · ĐT: '+esc(settings.phone):''}</div></div>
     <h1 style="text-align:center;font-size:18px;margin:10px 0">${title}</h1>
     <div>Số: <b>${esc(v.code)}</b> · Ngày: ${new Date(v.date).toLocaleString('vi-VN')}</div>
