@@ -28,13 +28,13 @@
 <style>
   :root{
     /* Bảng "Warm Minimalist" — Nội Thất Đại Thiên */
-    --terra:#C89F82;                                   /* đất nung (trang trí) */
-    --orange:#AE7552;--orange-d:#965F3E;--orange-l:#EFE3D6; /* đất nung đậm (nút/điểm nhấn) */
-    --sage:#A3B18A;--sage-d:#7E8C66;                   /* xanh sage */
-    --ink:#2E342B;--ink2:#3D453A;--muted:#8C857A;      /* xanh than (chữ) */
+    --terra:#C89F82;                                   /* đất nung nhạt (trang trí) */
+    --orange:#D2661F;--orange-d:#B5531A;--orange-l:#F7E6D8; /* CAM signature (nút/điểm nhấn) */
+    --sage:#A3B18A;--sage-d:#7E8C66;                   /* xanh sage (phụ trợ) */
+    --ink:#2E342B;--ink2:#3D453A;--muted:#8C857A;      /* xanh than (chữ/header/footer) */
     --green:#366336;
     --line:#E8E0D4;--line2:#D9CFBF;--bg:#F5EFE6;--panel:#FFFFFF;--cream:#FAF5EC;--cotton:#F8F8F8;
-    --ok:#4F7A4F;--warn:#B6791F;--sale:#B45339;--gold:#9AA87E;--gold-d:#7E8C66;--zalo:#0068FF;
+    --ok:#4F7A4F;--warn:#B6791F;--sale:#B23A2A;--gold:#9AA87E;--gold-d:#7E8C66;--zalo:#0068FF;
     --ui:'Be Vietnam Pro',system-ui,sans-serif;--disp:'Montserrat',system-ui,sans-serif;
     --r:9px;--r-sm:6px;--shadow:0 1px 2px rgba(46,52,43,.05),0 16px 38px rgba(46,52,43,.08);
   }
@@ -50,7 +50,7 @@
   .topbar{background:var(--ink);color:#fff;border-bottom:1px solid rgba(163,177,138,.45)}
   .topbar .in{max-width:1200px;margin:0 auto;padding:13px 20px;display:flex;align-items:center;gap:16px}
   .brand{display:flex;align-items:center;gap:13px;cursor:pointer;flex:none;min-width:0}
-  .blogo{width:44px;height:44px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.02em;color:#fff;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 4px 14px rgba(174,117,82,.32)}
+  .blogo{width:44px;height:44px;border-radius:8px;background:var(--orange);display:flex;align-items:center;justify-content:center;font-family:var(--disp);font-weight:700;font-size:17px;letter-spacing:.02em;color:#fff;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 4px 14px rgba(210,102,31,.34)}
   .bnames{min-width:0;display:flex;flex-direction:column}
   .bnames b{font-family:var(--disp);font-size:18px;font-weight:700;line-height:1.12;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bnames .sub{font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -137,7 +137,7 @@
 
   .hero{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(125% 150% at 82% 8%,#3F4937 0%,#2A3026 52%,#222820 100%);color:#fff;padding:54px;margin:4px 0 36px;min-height:360px;display:flex;flex-direction:column;border:1px solid rgba(163,177,138,.25)}
   .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transform-origin:center}
-  .hero:not(.has-img)::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(95deg,rgba(200,159,130,.2),transparent 58%);pointer-events:none}
+  .hero:not(.has-img)::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(95deg,rgba(210,102,31,.22),transparent 58%);pointer-events:none}
   .hero.has-img::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(20,24,17,.55),rgba(20,24,17,.12));pointer-events:none}
   .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(163,177,138,.22);border-radius:50%;box-shadow:0 0 0 30px rgba(163,177,138,.06);z-index:1}
   .hero.has-img::after{display:none}
@@ -191,7 +191,7 @@
   .thumb{position:relative;aspect-ratio:1/1;background:#F4EFE8;display:flex;align-items:center;justify-content:center;color:#CBBDAC;cursor:pointer;overflow:hidden;font-size:54px}
   .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
   .pcard:hover .thumb img{transform:scale(1.05)}
-  .disc{position:absolute;top:11px;left:11px;background:var(--ink);color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;padding:5px 9px;border-radius:4px}
+  .disc{position:absolute;top:11px;left:11px;background:var(--orange);color:#fff;font-size:11px;font-weight:700;letter-spacing:.04em;padding:5px 9px;border-radius:4px}
   .soldout{position:absolute;inset:0;background:rgba(250,246,239,.7);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink);letter-spacing:.08em;text-transform:uppercase;font-size:13px}
   .pbody{padding:15px 16px 17px;display:flex;flex-direction:column;flex:1}
   .pcat{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-d);font-weight:700}
@@ -201,8 +201,8 @@
   .pprice .now.nodeal{color:var(--ink)}
   .pprice .old{font-size:12.5px;color:var(--muted);text-decoration:line-through}
   .psold{font-size:11px;letter-spacing:.04em;color:var(--muted);margin-bottom:13px;min-height:14px}
-  .buy{margin-top:auto;width:100%;border:1px solid var(--ink);background:var(--ink);color:#fff;border-radius:var(--r-sm);padding:11px;font-weight:600;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;transition:.16s}
-  .buy:hover{background:var(--orange);border-color:var(--orange)}
+  .buy{margin-top:auto;width:100%;border:1px solid var(--orange);background:var(--orange);color:#fff;border-radius:var(--r-sm);padding:11px;font-weight:600;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer;transition:.16s}
+  .buy:hover{background:var(--orange-d);border-color:var(--orange-d)}
   .buy[disabled]{background:#F0E9DF;color:#B3A595;border-color:#F0E9DF;cursor:not-allowed}
   #btnCart{position:relative}
   .cbadge{background:#fff;color:var(--orange-d);font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:10px;display:none;align-items:center;justify-content:center;padding:0 4px;margin-left:4px}
@@ -591,7 +591,7 @@ function renderBrand(){
   const lg=$('#brandLogo'), bn=document.querySelector('.brand .bnames');
   if(settings.logo){lg.src=settings.logo;lg.style.display='block';$('#blogo').style.display='none';if(bn)bn.style.display='none';setFavicon(settings.logo);}
   else{lg.style.display='none';$('#blogo').style.display='flex';if(bn)bn.style.display='flex';
-    setFavicon("data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' rx='14' fill='#AE7552'/><text x='32' y='44' font-family='Montserrat,Arial,sans-serif' font-size='30' font-weight='700' fill='#fff' text-anchor='middle'>"+brandMark(settings.shop)+"</text></svg>"));}
+    setFavicon("data:image/svg+xml,"+encodeURIComponent("<svg xmlns='http://www.w3.org/2000/svg' width='64' height='64'><rect width='64' height='64' rx='14' fill='#D2661F'/><text x='32' y='44' font-family='Montserrat,Arial,sans-serif' font-size='30' font-weight='700' fill='#fff' text-anchor='middle'>"+brandMark(settings.shop)+"</text></svg>"));}
   const a=settings.ann||{};
   $('#annbar').style.display=(a.show===false)?'none':'';
   $('#annbar').innerHTML=`<div class="in"><span style="display:inline-flex;align-items:center;gap:7px;color:var(--gold)">${svgIcon('spark',13)}</span><span>${esc(a.text||'')}</span>${settings.phone?`<span style="display:inline-flex;align-items:center;gap:6px">${svgIcon('phone',13)} Hotline/Zalo: <b>${esc(settings.phone)}</b></span>`:''}</div>`;
@@ -1189,7 +1189,7 @@ function printTags(ids){
       <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#888">${esc(settings.shop)}</div>
       <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;margin:3px 0">${esc(p.name)}</div>
       <div style="font-size:11px;color:#666">Mã: ${esc(p.sku||'—')}${p.size?' · '+esc(p.size):''}</div>
-      <div style="margin-top:6px"><span style="font-size:20px;font-weight:800;color:#965F3E">${fmt(sellPrice(p))}</span>${hasSale?` <span style="text-decoration:line-through;color:#999;font-size:13px">${fmt(p.price)}</span>`:''}</div></div>
+      <div style="margin-top:6px"><span style="font-size:20px;font-weight:800;color:#B5531A">${fmt(sellPrice(p))}</span>${hasSale?` <span style="text-decoration:line-through;color:#999;font-size:13px">${fmt(p.price)}</span>`:''}</div></div>
       <div style="width:74px;height:74px;flex:none">${qrSvg('SP:'+(p.sku||p.id)+'|'+p.name)}</div>
     </div>`;}).join('');
   $('#printArea').innerHTML=`<div class="tags" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px">${tags}</div>`;
