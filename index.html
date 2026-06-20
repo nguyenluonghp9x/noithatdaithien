@@ -138,7 +138,6 @@
   .hero{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(125% 150% at 82% 8%,#3F4937 0%,#2A3026 52%,#222820 100%);color:#fff;padding:54px;margin:4px 0 36px;min-height:360px;display:flex;flex-direction:column;border:1px solid rgba(163,177,138,.25)}
   .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transform-origin:center}
   .hero:not(.has-img)::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(95deg,rgba(210,102,31,.22),transparent 58%);pointer-events:none}
-  .hero.has-img::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(20,24,17,.55),rgba(20,24,17,.12));pointer-events:none}
   .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(163,177,138,.22);border-radius:50%;box-shadow:0 0 0 30px rgba(163,177,138,.06);z-index:1}
   .hero.has-img::after{display:none}
   .hero-inner{position:relative;z-index:2;display:flex;flex-direction:column;max-width:620px;width:100%}
@@ -146,7 +145,7 @@
   .hero.h-left{align-items:flex-start}.hero.h-left .hero-inner{text-align:left;align-items:flex-start}
   .hero.h-center{align-items:center}.hero.h-center .hero-inner{text-align:center;align-items:center}
   .hero.h-right{align-items:flex-end}.hero.h-right .hero-inner{text-align:right;align-items:flex-end}
-  .hero.has-img .hero-inner .eyebrow,.hero.has-img .hero-inner h1,.hero.has-img .hero-inner p{text-shadow:0 2px 16px rgba(0,0,0,.45)}
+  .hero.has-img .hero-inner .eyebrow,.hero.has-img .hero-inner h1,.hero.has-img .hero-inner p{text-shadow:0 1px 3px rgba(0,0,0,.55),0 2px 22px rgba(0,0,0,.5)}
   .trustedit{display:grid;grid-template-columns:60px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px}
   .hero .eyebrow{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:16px}
   .hero.has-img .eyebrow{color:#EBDFCF}
@@ -829,9 +828,10 @@ function heroBgHTML(h){
   const z=(h.imgZoom||100)/100;
   return `<img class="hero-bg" src="${esc(h.image)}" alt="" style="object-position:${esc(h.imgPos||'50% 50%')};transform:scale(${z})">`;
 }
+function heroHasText(h){return h.image?!!(h.eyebrow||h.title||h.desc||h.btn):true;}
 function heroHTML(){
   const h=settings.hero||{};
-  const cls=`hero${h.image?' has-img':''} v-${h.valign||'bottom'} h-${h.halign||'left'}`;
+  const cls=`hero${h.image?' has-img':''}${heroHasText(h)?' has-text':''} v-${h.valign||'bottom'} h-${h.halign||'left'}`;
   return `<section class="${cls}">${heroBgHTML(h)}<div class="hero-inner">${heroInner(h)}</div></section>`;
 }
 function trustHTML(){
@@ -1200,7 +1200,7 @@ function printTags(ids){
 const POSCELLS=[['top','left'],['top','center'],['top','right'],['center','left'],['center','center'],['center','right'],['bottom','left'],['bottom','center'],['bottom','right']];
 function gdPreview(){
   const gh=window._gh;const el=$('#gdPrev');if(!el)return;
-  el.className=`hero gdmini${gh.image?' has-img':''} v-${gh.valign||'bottom'} h-${gh.halign||'left'}`;
+  el.className=`hero gdmini${gh.image?' has-img':''}${heroHasText(gh)?' has-text':''} v-${gh.valign||'bottom'} h-${gh.halign||'left'}`;
   el.innerHTML=heroBgHTML(gh)+`<div class="hero-inner">${heroInner(gh,{preview:true})}</div>`;
   bindGdDrag();
 }
