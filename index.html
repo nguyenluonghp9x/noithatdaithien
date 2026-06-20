@@ -122,6 +122,10 @@
 
   /* ---------- CỬA HÀNG (khách) — phong cách hiện đại ---------- */
   body.shopping{background:#FAF6EF}
+  svg.ico{display:inline-block;vertical-align:-.16em;flex:none}
+  .trust .t .ic svg.ico,.sechead h2 svg.ico{color:var(--gold)}
+  .catcard .ic svg.ico{color:var(--ink)}
+  .thumb svg.ico{color:#C3B4A2}
   .annbar{background:var(--ink);color:#E7DACB;font-size:12px;letter-spacing:.04em;display:none}
   body.shopping .annbar{display:block}
   .annbar .in{max-width:1200px;margin:0 auto;padding:7px 20px;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;text-align:center}
@@ -129,7 +133,7 @@
 
   .hero{position:relative;border-radius:14px;overflow:hidden;background:radial-gradient(125% 150% at 82% 8%,#3A2B20 0%,#1C1610 52%,#15100C 100%);color:#fff;padding:62px 54px;margin:4px 0 36px;min-height:336px;display:flex;flex-direction:column;justify-content:center;border:1px solid rgba(176,137,74,.22)}
   .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(95deg,rgba(226,97,30,.14),transparent 58%);pointer-events:none}
-  .hero::after{content:"🛋️";position:absolute;right:24px;bottom:-30px;font-size:210px;opacity:.07;transform:rotate(-7deg)}
+  .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(176,137,74,.2);border-radius:50%;box-shadow:0 0 0 30px rgba(176,137,74,.05)}
   .hero.has-img::after{display:none}
   .bannerprev{position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--line2);aspect-ratio:21/8;background:#F0E9DF url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22/>') center/cover;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
   .bannerprev img{width:100%;height:100%;object-fit:cover}
@@ -145,14 +149,14 @@
 
   .trust{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:42px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
   .trust .t{display:flex;align-items:center;gap:13px;background:#fff;padding:18px 20px}
-  .trust .t .ic{font-size:23px;flex:none}
+  .trust .t .ic{display:flex;align-items:center;flex:none}
   .trust .t b{display:block;font-size:13px;font-weight:700}
   .trust .t .d{font-size:11.5px;color:var(--muted);margin-top:1px}
 
   .catnav{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;margin-bottom:50px}
   .catcard{border:1px solid var(--line);border-radius:10px;padding:24px 14px;text-align:center;cursor:pointer;background:#fff;transition:.18s}
   .catcard:hover{border-color:var(--gold);box-shadow:var(--shadow);transform:translateY(-3px)}
-  .catcard .ic{font-size:30px}
+  .catcard .ic{display:flex;justify-content:center;align-items:center;height:32px}
   .catcard .nm{font-weight:600;font-size:13.5px;margin-top:11px;line-height:1.3}
   .catcard .ct{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:5px}
 
@@ -279,8 +283,8 @@
     <div class="spacer"></div>
     <div class="rightnav">
       <div class="areas">
-        <button class="area" data-area="shop" aria-pressed="true">🛍 Cửa hàng</button>
-        <button class="area" data-area="admin" aria-pressed="false">🔐 Quản trị</button>
+        <button class="area" data-area="shop" aria-pressed="true"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Cửa hàng</button>
+        <button class="area" data-area="admin" aria-pressed="false"><svg class="ico" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Quản trị</button>
       </div>
       <div class="topact" id="topact"></div>
     </div>
@@ -433,8 +437,8 @@ const DEFSET={
   showPrice:true, ownerPin:'0000', appsScriptUrl:'',
   bank:{bin:'',acc:'',name:''},
   hero:{eyebrow:'', title:'', desc:'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn. Mua sắm dễ dàng cho phòng khách, phòng ngủ, phòng ăn và hơn thế nữa.', btn:'Khám phá sản phẩm', image:''},
-  ann:{show:true, text:'✨ An toàn sức khỏe · Giao lắp tận nơi · Bảo hành dài hạn'},
-  trust:[{ic:'🚚',t:'Miễn phí giao lắp',d:'Khu vực nội thành'},{ic:'🔄',t:'Đổi trả dễ dàng',d:'Trong 7 ngày'},{ic:'🛡️',t:'Bảo hành dài hạn',d:'Yên tâm sử dụng'},{ic:'✏️',t:'Tư vấn thiết kế',d:'Hoàn toàn miễn phí'}],
+  ann:{show:true, text:'An toàn sức khỏe · Giao lắp tận nơi · Bảo hành dài hạn'},
+  trust:[{ic:'truck',t:'Miễn phí giao lắp',d:'Khu vực nội thành'},{ic:'refresh',t:'Đổi trả dễ dàng',d:'Trong 7 ngày'},{ic:'shield',t:'Bảo hành dài hạn',d:'Yên tâm sử dụng'},{ic:'pencil',t:'Tư vấn thiết kế',d:'Hoàn toàn miễn phí'}],
   footer:{about:'', email:'cskh@daithien.vn', hours:'8:00 – 21:00', fb:'', yt:'', ig:'', tiktok:'', policies:'Giao hàng & lắp đặt\nChính sách bảo hành\nĐổi trả hàng\nBảo mật thông tin'}
 };
 
@@ -528,31 +532,31 @@ function renderBrand(){
   document.title=settings.shop||'Nội Thất Đại Thiên';
   const a=settings.ann||{};
   $('#annbar').style.display=(a.show===false)?'none':'';
-  $('#annbar').innerHTML=`<div class="in"><span>${esc(a.text||'')}</span>${settings.phone?`<span>☎ Hotline/Zalo: <b>${esc(settings.phone)}</b></span>`:''}</div>`;
+  $('#annbar').innerHTML=`<div class="in"><span style="display:inline-flex;align-items:center;gap:7px;color:var(--gold)">${svgIcon('spark',13)}</span><span>${esc(a.text||'')}</span>${settings.phone?`<span style="display:inline-flex;align-items:center;gap:6px">${svgIcon('phone',13)} Hotline/Zalo: <b>${esc(settings.phone)}</b></span>`:''}</div>`;
   $('#footer').innerHTML=footerHTML();
   $('#footer').querySelectorAll('[data-fcat]').forEach(a=>a.onclick=()=>{area='shop';document.querySelectorAll('.area').forEach(x=>x.setAttribute('aria-pressed',x.dataset.area==='shop'));active=a.dataset.fcat;renderTopAct();renderTabs();renderView();window.scrollTo({top:0,behavior:'smooth'});});
 }
 function footerHTML(){
   const f=settings.footer||{};
-  const soc=[['fb','f','Facebook'],['yt','▶','Youtube'],['ig','◎','Instagram'],['tiktok','♪','TikTok']]
-    .filter(([k])=>f[k]).map(([k,ic,t])=>`<a href="${esc(f[k])}" target="_blank" title="${t}">${ic}</a>`).join('')
-    || `<a title="Facebook">f</a><a title="Youtube">▶</a><a title="Instagram">◎</a>`;
+  const soc=[['fb','facebook','Facebook'],['yt','youtube','Youtube'],['ig','instagram','Instagram'],['tiktok','tiktok','TikTok']]
+    .filter(([k])=>f[k]).map(([k,ic,t])=>`<a href="${esc(f[k])}" target="_blank" title="${t}">${svgIcon(ic,17)}</a>`).join('')
+    || `<a title="Facebook">${svgIcon('facebook',17)}</a><a title="Youtube">${svgIcon('youtube',17)}</a><a title="Instagram">${svgIcon('instagram',17)}</a>`;
   const pol=(f.policies||'').split(/\n+/).map(s=>s.trim()).filter(Boolean);
   return `<div class="in">
     <div><div class="ft-brand"><b>${esc(settings.shop)}</b></div>
       <p style="margin-top:10px">${esc(f.about||settings.note||'')}</p>
-      <p style="margin-top:6px">📍 ${esc(settings.address||'')}</p>
+      <p style="margin-top:6px;display:flex;gap:7px">${svgIcon('pin',15)} ${esc(settings.address||'')}</p>
       <div class="social">${soc}</div></div>
     <div><h5>Danh mục</h5>${cats.slice(0,7).map(c=>`<a data-fcat="${esc(c)}">${esc(c)}</a>`).join('')||'<p>—</p>'}</div>
     <div><h5>Chính sách</h5>${pol.map(p=>`<a>${esc(p)}</a>`).join('')||'<p>—</p>'}</div>
-    <div><h5>Liên hệ &amp; hỗ trợ</h5>${settings.phone?`<a href="${telLink()}">☎ ${esc(settings.phone)}</a>`:''}<a href="${zaloLink()}" target="_blank">💬 Chat Zalo</a>${f.email?`<a>✉ ${esc(f.email)}</a>`:''}${f.hours?`<p style="margin-top:8px">Giờ mở cửa: ${esc(f.hours)}</p>`:''}</div>
+    <div><h5>Liên hệ &amp; hỗ trợ</h5>${settings.phone?`<a href="${telLink()}" style="display:flex;gap:8px;align-items:center">${svgIcon('phone',15)} ${esc(settings.phone)}</a>`:''}<a href="${zaloLink()}" target="_blank" style="display:flex;gap:8px;align-items:center">${svgIcon('chat',15)} Chat Zalo</a>${f.email?`<a style="display:flex;gap:8px;align-items:center">${svgIcon('mail',15)} ${esc(f.email)}</a>`:''}${f.hours?`<p style="margin-top:8px;display:flex;gap:8px;align-items:center">${svgIcon('clock',15)} ${esc(f.hours)}</p>`:''}</div>
   </div>
   <div class="copy">© 2026 ${esc(settings.shop)} · Nội thất bền đẹp, an tâm mua sắm</div>`;
 }
 function renderTopAct(){
   const t=$('#topact');
   if(area==='shop'){
-    t.innerHTML=`<button id="btnCart">🛒 Giỏ<span class="cbadge" id="cartCount">0</span></button>`;
+    t.innerHTML=`<button id="btnCart">${svgIcon('bag',15)} Giỏ<span class="cbadge" id="cartCount">0</span></button>`;
     $('#btnCart').onclick=openCart;updateCart();
   }else{
     if(session.staff){
@@ -645,10 +649,46 @@ function shopFiltered(){let l=products.slice();
   else if(active!=='__all')l=l.filter(p=>p.cat===active);
   if(search){const s=search.toLowerCase();l=l.filter(p=>(p.name||'').toLowerCase().includes(s)||(p.sku||'').toLowerCase().includes(s));}
   return l;}
-const CAT_ICON={'Sofa & Phòng khách':'🛋️','Bàn ăn':'🍽️','Phòng ngủ':'🛏️','Bàn ghế học sinh':'📚','Văn phòng':'💼','Tủ kệ':'🗄️','Tủ bếp':'🍳','Nệm':'🛌'};
-function catIcon(c){if(CAT_ICON[c])return CAT_ICON[c];const k=(c||'').toLowerCase();
-  if(/sofa|khách/.test(k))return '🛋️';if(/ngủ|giường|tủ quần/.test(k))return '🛏️';if(/ăn|bàn ăn/.test(k))return '🍽️';
-  if(/học|học sinh/.test(k))return '📚';if(/văn phòng|làm việc/.test(k))return '💼';if(/bếp/.test(k))return '🍳';if(/nệm/.test(k))return '🛌';return '🪑';}
+/* ---------- BỘ ICON NÉT MẢNH (line icons) ---------- */
+const ICONS={
+  truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+  refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+  shield:'<path d="M20 13c0 5-3.5 7.4-7.66 8.95a1 1 0 0 1-.67 0C7.5 20.4 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+  pencil:'<path d="M21.17 6.83a2.83 2.83 0 0 0-4-4L3 17v4h4z"/><path d="m15 5 4 4"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  bag:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  mail:'<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+  chat:'<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  tag:'<path d="M12.59 2.59A2 2 0 0 0 11.17 2H4a2 2 0 0 0-2 2v7.17a2 2 0 0 0 .59 1.41l8.7 8.7a2.43 2.43 0 0 0 3.42 0l6.58-6.58a2.43 2.43 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".6" fill="currentColor"/>',
+  spark:'<path d="M9.94 14.5A2 2 0 0 0 8.5 13.06l-5.64-1.45a.5.5 0 0 1 0-.96L8.5 9.19a2 2 0 0 0 1.44-1.45l1.45-5.64a.5.5 0 0 1 .96 0l1.45 5.64a2 2 0 0 0 1.44 1.45l5.64 1.46a.5.5 0 0 1 0 .96l-5.64 1.44a2 2 0 0 0-1.44 1.45l-1.45 5.64a.5.5 0 0 1-.96 0z"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  sofa:'<path d="M20 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v3"/><path d="M2 11v5a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H6v-2a2 2 0 0 0-4 0z"/><path d="M4 18v2M20 18v2M12 4v9"/>',
+  dining:'<path d="M3 2v7c0 1.1.9 2 2 2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/>',
+  bed:'<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>',
+  book:'<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>',
+  office:'<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+  cabinet:'<rect width="18" height="5" x="3" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
+  kitchen:'<path d="M17 21a1 1 0 0 0 1-1v-5.35c0-.46.32-.84.73-1.04a4 4 0 0 0-2.13-7.59 5 5 0 0 0-9.19 0 4 4 0 0 0-2.13 7.59c.41.2.73.58.73 1.04V20a1 1 0 0 0 1 1z"/><path d="M6 17h12"/>',
+  chair:'<path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M5 16a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2 2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M6 18v3M18 18v3"/>',
+  facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>',
+  youtube:'<path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.5C5.12 20 12 20 12 20s6.88 0 8.6-.5a2.78 2.78 0 0 0 1.94-1.92A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><path d="m10 15 5-3-5-3z"/>',
+  instagram:'<rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/>',
+  tiktok:'<path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>'
+};
+function svgIcon(name,size,sw){size=size||18;sw=sw||1.6;const p=ICONS[name];if(!p)return '';
+  return `<svg class="ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;}
+const EMOJI2ICON={'🚚':'truck','🔄':'refresh','🛡️':'shield','✏️':'pencil','📞':'phone','☎':'phone','🔍':'search','🔎':'search','🛒':'bag','🛍':'bag','📍':'pin','✉':'mail','💬':'chat','⚡':'tag','🔥':'flame','✨':'spark','🛋️':'sofa','🛏️':'bed','🍽️':'dining','📚':'book','💼':'office','🗄️':'cabinet','🍳':'kitchen','🪑':'chair','🔐':'lock','🛌':'bed','🕐':'clock','⏰':'clock'};
+function renderIcon(v,size){if(ICONS[v])return svgIcon(v,size);if(EMOJI2ICON[v])return svgIcon(EMOJI2ICON[v],size);return esc(v||'');} // tên icon hoặc emoji -> svg, ngược lại giữ chữ
+function catIconName(c){const k=(c||'').toLowerCase();
+  if(/sofa|khách|phòng khách/.test(k))return 'sofa';if(/ngủ|giường|tủ quần/.test(k))return 'bed';
+  if(/bàn ăn|phòng ăn|ăn/.test(k))return 'dining';if(/học/.test(k))return 'book';
+  if(/văn phòng|làm việc/.test(k))return 'office';if(/bếp/.test(k))return 'kitchen';
+  if(/nệm/.test(k))return 'bed';if(/tủ|kệ/.test(k))return 'cabinet';return 'chair';}
+function catIcon(c,size){return svgIcon(catIconName(c),size||30,1.5);}
 function soldMap(){const m={};vouchers.filter(v=>v.type==='ban').forEach(v=>v.items.forEach(i=>{m[i.id]=(m[i.id]||0)+i.qty;}));return m;}
 
 function priceHTML(p){
@@ -662,7 +702,7 @@ function shopCard(p){
   const pct=hasSale?Math.round((1-p.salePrice/p.price)*100):0;
   const sold=(window._sold&&window._sold[p.id])||0;
   return `<div class="pcard" data-id="${p.id}">
-    <div class="thumb" data-open>${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:catIcon(p.cat)}
+    <div class="thumb" data-open>${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:catIcon(p.cat,52)}
       ${hasSale?`<span class="disc">-${pct}%</span>`:''}${!st.avail?'<span class="soldout">Hết hàng</span>':''}</div>
     <div class="pbody">
       <div class="pcat">${esc(p.cat||'Nội thất')}</div>
@@ -679,16 +719,16 @@ function heroHTML(){
     <div class="eyebrow">${esc(h.eyebrow||settings.shop)}</div>
     <h1>${esc(h.title||settings.slogan||'Nội thất bền đẹp cho tổ ấm của bạn')}</h1>
     <p>${esc(h.desc||'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn.')}</p>
-    <div class="hbtns"><button class="hbtn" id="heroShop">${esc(h.btn||'Khám phá sản phẩm')} →</button>${settings.phone?`<a class="hbtn ghost" href="${telLink()}">☎ ${esc(settings.phone)}</a>`:''}</div>
+    <div class="hbtns"><button class="hbtn" id="heroShop">${esc(h.btn||'Khám phá sản phẩm')} →</button>${settings.phone?`<a class="hbtn ghost" href="${telLink()}">${svgIcon('phone',15)} ${esc(settings.phone)}</a>`:''}</div>
   </section>`;
 }
 function trustHTML(){
   const items=(settings.trust||[]).filter(x=>x&&(x.t||x.ic));
   if(!items.length)return '';
-  return `<div class="trust">`+items.map(x=>`<div class="t"><span class="ic">${esc(x.ic||'•')}</span><span><b>${esc(x.t||'')}</b><span class="d">${esc(x.d||'')}</span></span></div>`).join('')+`</div>`;
+  return `<div class="trust">`+items.map(x=>`<div class="t"><span class="ic">${renderIcon(x.ic,22)}</span><span><b>${esc(x.t||'')}</b><span class="d">${esc(x.d||'')}</span></span></div>`).join('')+`</div>`;
 }
-function secHTML(title,arr){
-  return `<div class="sec"><div class="sechead"><h2><span class="bar"></span>${title}</h2></div><div class="grid">${arr.map(shopCard).join('')}</div></div>`;
+function secHTML(icon,title,arr){
+  return `<div class="sec"><div class="sechead"><h2>${svgIcon(icon,21)} ${title}</h2></div><div class="grid">${arr.map(shopCard).join('')}</div></div>`;
 }
 function renderShop(){
   const c=catCounts();const sold=window._sold=soldMap();
@@ -699,12 +739,12 @@ function renderShop(){
     if(cats.length)html+=`<div class="catnav">`+cats.map(x=>`<div class="catcard" data-cat="${esc(x)}"><div class="ic">${catIcon(x)}</div><div class="nm">${esc(x)}</div><div class="ct">${c[x]||0} sản phẩm</div></div>`).join('')+`</div>`;
     const deals=products.filter(p=>p.salePrice&&p.salePrice<p.price).slice(0,8);
     const best=[...products].filter(p=>sold[p.id]).sort((a,b)=>sold[b.id]-sold[a.id]).slice(0,8);
-    if(deals.length)html+=secHTML('⚡ Giá siêu tốt',deals);
-    if(best.length)html+=secHTML('🔥 Bán chạy nhất',best);
+    if(deals.length)html+=secHTML('tag','Giá siêu tốt',deals);
+    if(best.length)html+=secHTML('flame','Bán chạy nhất',best);
   }
   const list=shopFiltered();
   html+=`<div class="sec">
-    <div class="searchbar">🔎<input id="q" placeholder="Tìm sản phẩm, mã SP..." value="${esc(search)}"></div>
+    <div class="searchbar"><span style="color:var(--muted);display:flex">${svgIcon('search',18)}</span><input id="q" placeholder="Tìm sản phẩm, mã SP..." value="${esc(search)}"></div>
     <div class="catchips"><button class="catchip" data-c="__all" aria-pressed="${active==='__all'}">Tất cả</button>
       ${cats.map(x=>`<button class="catchip" data-c="${esc(x)}" aria-pressed="${active===x}">${esc(x)}</button>`).join('')}
       ${c.__none?`<button class="catchip" data-c="__none" aria-pressed="${active==='__none'}">Khác</button>`:''}</div>
@@ -728,7 +768,7 @@ function bindShopCards(){
 function openDetail(id){
   const p=prod(id);if(!p)return;const st=stockState(p);const img=p.images&&p.images[0];
   const rows=[['Mã SP',p.sku||'—'],['Danh mục',p.cat||'—'],['Chất liệu',p.material||'—'],['Kích thước',p.size||'—'],['Màu / biến thể',p.color||'—'],['Tình trạng',st.txt]];
-  $('#ovContent').innerHTML=`<div class="dimg">${img?`<img src="${esc(img)}">`:'🛋️'}</div>
+  $('#ovContent').innerHTML=`<div class="dimg">${img?`<img src="${esc(img)}">`:`<span style="color:#C3B4A2;display:flex">${catIcon(p.cat,66)}</span>`}</div>
     <div class="mbody">
       <h2 style="font-size:23px;margin-bottom:2px">${esc(p.name)}</h2>
       ${p.desc?`<p class="muted" style="margin:8px 0 0">${esc(p.desc)}</p>`:''}
@@ -736,8 +776,8 @@ function openDetail(id){
       <table style="margin:14px 0">${rows.map(([k,v])=>`<tr><td class="muted">${esc(k)}</td><td class="right" style="font-weight:600">${esc(v)}</td></tr>`).join('')}</table>
       <div class="pprice" style="font-size:24px">${priceHTML(p)}</div>
       <div class="row" style="margin-top:14px">
-        ${st.avail?`<button class="btn dark" id="dAdd" style="flex:2">🛒 Thêm vào giỏ</button>`:`<button class="btn alt" disabled style="flex:2">Hết hàng</button>`}
-        <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">☎ Gọi</a>
+        ${st.avail?`<button class="btn dark" id="dAdd" style="flex:2">${svgIcon('bag',16)} Thêm vào giỏ</button>`:`<button class="btn alt" disabled style="flex:2">Hết hàng</button>`}
+        <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">${svgIcon('phone',15)} Gọi</a>
       </div>
     </div>`;
   $('#ov').classList.add('show');
@@ -753,9 +793,9 @@ async function setQty(id,q){if(q<=0)delete cart[id];else cart[id]=q;await saveCa
 function openCart(){
   const ids=inCart();const total=ids.reduce((s,id)=>s+sellPrice(prod(id))*cart[id],0);
   $('#ovContent').innerHTML=`<div class="mbody">
-    <h2 style="margin-bottom:12px">🛒 Giỏ hàng${ids.length?' ('+cartCount()+')':''}</h2>
+    <h2 style="margin-bottom:12px;display:flex;align-items:center;gap:9px">${svgIcon('bag',20)} Giỏ hàng${ids.length?' ('+cartCount()+')':''}</h2>
     ${ids.length?`${ids.map(id=>{const p=prod(id),im=p.images&&p.images[0];return `<div class="crow" data-id="${id}">
-        <div class="cthumb">${im?`<img src="${esc(im)}">`:'🛋️'}</div>
+        <div class="cthumb">${im?`<img src="${esc(im)}">`:`<span style="color:#C3B4A2;display:flex">${catIcon(p.cat,22)}</span>`}</div>
         <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(p.name)}</div><div class="muted" style="font-size:11.5px">${fmt(sellPrice(p))}${p.unit?' / '+esc(p.unit):''}</div></div>
         <div class="qty"><button data-dec>−</button><span>${cart[id]}</span><button data-inc>+</button></div>
         <div class="clt">${fmt(sellPrice(p)*cart[id])}</div><button class="crm" data-rm>×</button></div>`;}).join('')}
@@ -810,7 +850,7 @@ function showOrderDone(o){
     <textarea readonly style="width:100%;height:150px;background:var(--cream);border:1px solid var(--line2);border-radius:10px;padding:12px;font-size:13px">${esc(text)}</textarea>
     <div class="row" style="margin-top:12px">
       <button class="btn" id="copyZalo" style="flex:2">📋 Sao chép & gửi Zalo</button>
-      <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">☎ Gọi</a>
+      <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">${svgIcon('phone',15)} Gọi</a>
     </div>
     <button class="btn alt" id="doneClear" style="margin-top:10px">Hoàn tất · Xóa giỏ</button>
   </div>`;
