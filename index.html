@@ -282,6 +282,12 @@
   .backlink:hover{color:var(--orange-d)}
   .prodcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
   .prodcard .dmain{aspect-ratio:1/1}
+  .crumb{display:flex;flex-wrap:wrap;gap:7px;align-items:center;font-size:12.5px;color:var(--muted);margin-bottom:14px}
+  .crumb a{cursor:pointer}.crumb a:hover{color:var(--orange-d)}.crumb b{color:var(--ink)}
+  .qtyrow{display:flex;align-items:center;gap:14px;margin-top:18px}
+  .benefits{list-style:none;margin:18px 0 0;padding:16px 0 0;border-top:1px solid var(--line)}
+  .benefits li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--ink);margin:9px 0}
+  .benefits li svg.ico{color:var(--sage-d);flex:none}
   .mbody{padding:22px 24px 24px}
   .dimg{aspect-ratio:16/10;background:#F0E9DF;display:flex;align-items:center;justify-content:center;font-size:66px;overflow:hidden;border-radius:18px 18px 0 0}
   .dimg img{width:100%;height:100%;object-fit:cover}
@@ -531,6 +537,7 @@ const DEFSET={
   showPrice:true, ownerPin:'0000', appsScriptUrl:'',
   map:'', // tên/địa chỉ địa điểm trên Google Maps (để trống = tự dùng tên shop + địa chỉ)
   logo:'', // ảnh logo (PNG) hiện ở header; để trống = dùng ô chữ "ĐT"
+  track:{ga:'',gtm:'',fbpixel:'',tiktok:'',headhtml:''}, // mã theo dõi Google/GTM/Facebook/TikTok + mã tùy chỉnh
   bank:{bin:'',acc:'',name:''},
   hero:{eyebrow:'', title:'', desc:'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn. Mua sắm dễ dàng cho phòng khách, phòng ngủ, phòng ăn và hơn thế nữa.', btn:'Khám phá sản phẩm', image:'', imgPos:'50% 50%', imgZoom:100, valign:'bottom', halign:'left'},
   ann:{show:true, text:'An toàn sức khỏe · Giao lắp tận nơi · Bảo hành dài hạn'},
@@ -553,6 +560,7 @@ function applySettings(raw){
   settings.hero=Object.assign({},DEFSET.hero,settings.hero||{});
   settings.ann=Object.assign({},DEFSET.ann,settings.ann||{});
   settings.footer=Object.assign({},DEFSET.footer,settings.footer||{});
+  settings.track=Object.assign({},DEFSET.track,settings.track||{});
   if(!Array.isArray(settings.trust)||!settings.trust.length)settings.trust=DEFSET.trust.map(x=>({...x}));
 }
 function staffByEmail(email){return email?staff.find(s=>s.email&&s.email.toLowerCase()===email.toLowerCase()):null;}
@@ -621,6 +629,43 @@ const sellPrice=p=>(p.salePrice&&p.salePrice<p.price)?p.salePrice:p.price;
 
 /* ====================== BRAND / TOPBAR ====================== */
 function setFavicon(href){let l=document.querySelector('link[rel="icon"]');if(!l){l=document.createElement('link');l.rel='icon';document.head.appendChild(l);}l.href=href;}
+
+/* ====================== SEO / GEO (meta động + dữ liệu có cấu trúc) ====================== */
+function setMeta(key,val,attr){attr=attr||'name';let el=document.head.querySelector('meta['+attr+'="'+key+'"]');if(!el){el=document.createElement('meta');el.setAttribute(attr,key);document.head.appendChild(el);}el.setAttribute('content',val||'');}
+function setLink(rel,href){let el=document.head.querySelector('link[rel="'+rel+'"]');if(!el){el=document.createElement('link');el.setAttribute('rel',rel);document.head.appendChild(el);}el.setAttribute('href',href);}
+function setJsonLd(obj){let el=document.getElementById('jsonld');if(!el){el=document.createElement('script');el.id='jsonld';el.type='application/ld+json';document.head.appendChild(el);}el.textContent=JSON.stringify(obj);}
+function applySEO(p){
+  const base=location.origin+location.pathname;
+  if(p){
+    const url=base+'?p='+p.id;
+    const title=p.name+' · '+(settings.shop||'Nội Thất Đại Thiên');
+    const desc=(p.desc||(p.name+' - '+(p.cat||'nội thất')+' chính hãng tại '+(settings.shop||'')+'. '+(settings.address||''))).replace(/\s+/g,' ').trim().slice(0,160);
+    document.title=title;setMeta('description',desc);
+    setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','product','property');setMeta('og:url',url,'property');setMeta('og:site_name',settings.shop,'property');
+    if(p.images&&p.images[0])setMeta('og:image',p.images[0],'property');
+    setMeta('twitter:card','summary_large_image');setLink('canonical',url);
+    setJsonLd({"@context":"https://schema.org/","@type":"Product",name:p.name,image:(p.images||[]).slice(0,6),description:desc,sku:p.sku||undefined,category:p.cat||undefined,brand:{"@type":"Brand",name:settings.shop},offers:{"@type":"Offer",url:url,priceCurrency:"VND",price:String(sellPrice(p)),availability:stockState(p).avail?"https://schema.org/InStock":"https://schema.org/OutOfStock",seller:{"@type":"Organization",name:settings.shop}}});
+  }else{
+    const url=base;const title=settings.shop||'Nội Thất Đại Thiên';
+    const desc=((settings.slogan?settings.slogan+'. ':'')+(settings.note||'')+' '+(settings.address||'')).replace(/\s+/g,' ').trim().slice(0,160);
+    document.title=title;setMeta('description',desc);
+    setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','website','property');setMeta('og:url',url,'property');setMeta('og:site_name',settings.shop,'property');
+    if(settings.logo)setMeta('og:image',settings.logo,'property');
+    setMeta('twitter:card','summary');setLink('canonical',url);
+    setJsonLd({"@context":"https://schema.org","@type":"FurnitureStore",name:settings.shop,image:settings.logo||undefined,telephone:settings.phone,url:url,priceRange:"$$",address:{"@type":"PostalAddress",streetAddress:settings.address,addressLocality:"Hải Phòng",addressCountry:"VN"}});
+  }
+}
+/* ====================== TRACKING (Google / GTM / Facebook / TikTok / mã tùy chỉnh) ====================== */
+function injectTracking(){
+  if(window._trackDone)return;const t=settings.track||{};
+  if(!(t.ga||t.gtm||t.fbpixel||t.tiktok||t.headhtml))return;window._trackDone=true;
+  const addScript=(code,src)=>{const s=document.createElement('script');s.async=true;if(src)s.src=src;if(code)s.innerHTML=code;document.head.appendChild(s);};
+  if(t.ga){addScript(null,'https://www.googletagmanager.com/gtag/js?id='+t.ga);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};gtag('js',new Date());gtag('config',t.ga);}
+  if(t.gtm){addScript("(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','"+t.gtm+"');");}
+  if(t.fbpixel){addScript("!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','"+t.fbpixel+"');fbq('track','PageView');");}
+  if(t.tiktok){addScript("!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=['page','track','identify','instances','debug','on','off','once','ready','alias','group','enableCookie','disableCookie'];ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.load=function(e,n){var i='https://analytics.tiktok.com/i18n/pixel/events.js';ttq._i=ttq._i||{};ttq._i[e]=[];ttq._i[e]._u=i;ttq._t=ttq._t||{};ttq._t[e]=+new Date;var o=d.createElement('script');o.type='text/javascript';o.async=!0;o.src=i+'?sdkid='+e+'&lib='+t;var a=d.getElementsByTagName('script')[0];a.parentNode.insertBefore(o,a)};ttq.load('"+t.tiktok+"');ttq.page();}(window,document,'ttq');");}
+  if(t.headhtml){try{const tmp=document.createElement('div');tmp.innerHTML=t.headhtml;[...tmp.querySelectorAll('script')].forEach(o=>{const s=document.createElement('script');[...o.attributes].forEach(a=>s.setAttribute(a.name,a.value));s.innerHTML=o.innerHTML;document.head.appendChild(s);o.remove();});[...tmp.children].forEach(el=>document.head.appendChild(el));}catch(e){}}
+}
 function renderBrand(){
   $('#brandName').textContent=settings.shop||'Nội Thất Đại Thiên';
   $('#brandSub').textContent=settings.sub||'';
@@ -905,6 +950,7 @@ function mapHTML(){
   </div>`;
 }
 function renderShop(){
+  applySEO(null);
   const c=catCounts();const sold=window._sold=soldMap();
   const homepage=(active==='__all'&&!search);
   let html='';
@@ -964,7 +1010,8 @@ function productView(p,mode){
     </div>
     <div class="dinfo">
       <div class="pcat">${esc(p.cat||'Nội thất')}</div>
-      <h2 style="font-size:24px;margin:5px 0 8px;line-height:1.2">${esc(p.name)}</h2>
+      <h2 style="font-size:24px;margin:5px 0 6px;line-height:1.2">${esc(p.name)}</h2>
+      ${mode==='page'?`<div class="muted" style="font-size:12.5px;margin-bottom:10px">${p.sku?'Mã: <b>'+esc(p.sku)+'</b>':''}${(window._sold&&window._sold[id])?(p.sku?' · ':'')+'Đã bán '+window._sold[id]:''}</div>`:''}
       <div class="pprice" style="font-size:26px;margin:0 0 14px">${priceHTML(p)}</div>
       ${(p.desc&&mode==='page')?`<p class="muted" style="margin:0 0 16px;line-height:1.7">${esc(p.desc)}</p>`:(p.desc?`<p class="muted" style="margin:0 0 16px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(p.desc)}</p>`:'')}
       ${colors.length?`<div class="vargroup"><label>Màu sắc: <b id="dColorName" style="color:var(--ink)">${esc(v.color)}</b></label>
@@ -972,10 +1019,21 @@ function productView(p,mode){
       ${sizes.length?`<div class="vargroup"><label>Kích thước: <b id="dSizeName" style="color:var(--ink)">${esc(v.size)}</b></label>
         <div class="varchips" id="dSize">${sizes.map(s=>`<button class="varchip${s===v.size?' on':''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div></div>`:''}
       <table class="dspec">${specs.map(([k,vv])=>`<tr><td class="muted">${esc(k)}</td><td class="right" style="font-weight:600">${esc(vv)}</td></tr>`).join('')}</table>
-      <div class="row" style="margin-top:18px">
+      ${mode==='page'?`
+      <div class="qtyrow"><span class="muted" style="font-size:13px">Số lượng</span><div class="qty"><button id="qMinus">−</button><span id="qVal">1</span><button id="qPlus">+</button></div></div>
+      <div class="row" style="margin-top:14px">
+        ${st.avail?`<button class="btn alt" id="dAdd" style="flex:1">${svgIcon('bag',16)} Thêm vào giỏ</button><button class="btn" id="dBuy" style="flex:1">Mua ngay</button>`:`<button class="btn alt" disabled style="flex:1">Hết hàng</button>`}
+        <a class="btn" id="dZalo" href="${zaloLink()}" target="_blank" rel="noopener" style="flex:0 0 auto;background:var(--zalo);border-color:var(--zalo)">${svgIcon('chat',16)} Zalo</a>
+      </div>
+      <ul class="benefits">
+        <li>${svgIcon('truck',16)} Miễn phí giao &amp; lắp đặt khu vực nội thành</li>
+        <li>${svgIcon('shield',16)} Bảo hành dài hạn · đổi trả 1-1</li>
+        <li>${svgIcon('pin',16)} Có showroom: ${esc(settings.address||'Hải Phòng')}</li>
+      </ul>`
+      :`<div class="row" style="margin-top:18px">
         ${st.avail?`<button class="btn" id="dAdd" style="flex:2">${svgIcon('bag',16)} Thêm vào giỏ</button>`:`<button class="btn alt" disabled style="flex:2">Hết hàng</button>`}
         <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">${svgIcon('phone',15)} Gọi</a>
-      </div>
+      </div>`}
     </div>
   </div>`;
 }
@@ -1002,19 +1060,30 @@ function goProduct(id){if(!prod(id))return;productPageId=id;try{history.pushStat
   document.querySelectorAll('.area').forEach(x=>x.setAttribute('aria-pressed',x.dataset.area==='shop'));
   renderTopAct();renderTabs();renderView();window.scrollTo(0,0);}
 function goShop(){productPageId=null;try{history.pushState({},'', location.pathname);}catch(e){}renderView();window.scrollTo(0,0);}
+let pgQty=1;
 function renderProductPage(id){
   const p=prod(id);if(!p){goShop();return;}
+  window._sold=soldMap();pgQty=1;
   const related=products.filter(x=>x.id!==id&&x.cat===p.cat).slice(0,4);
   $('#view').innerHTML=`<div class="prodpage">
-    <button class="backlink" id="pBack">${svgIcon('back',16)} Quay lại cửa hàng</button>
+    <div class="crumb"><a id="cbHome">Cửa hàng</a><span>/</span>${p.cat?`<a id="cbCat">${esc(p.cat)}</a><span>/</span>`:''}<b>${esc(p.name)}</b></div>
     <div class="prodcard">${productView(p,'page')}</div>
-    ${related.length?`<div class="sec" style="margin-top:48px"><div class="sechead"><h2><span class="bar"></span>Sản phẩm cùng loại</h2></div><div class="grid">${related.map(shopCard).join('')}</div></div>`:''}
+    ${(p.desc||p.material||p.size)?`<div class="prodcard" style="margin-top:24px;padding:26px 30px"><h3 style="font-family:var(--disp);font-size:20px;margin:0 0 12px">Mô tả chi tiết</h3>
+      ${p.desc?`<p style="line-height:1.8;color:var(--ink);white-space:pre-line">${esc(p.desc)}</p>`:''}
+      <table class="dspec" style="margin-top:14px;max-width:480px">${[['Chất liệu',p.material],['Kích thước',p.size],['Đơn vị',p.unit],['Mã SP',p.sku]].filter(r=>r[1]).map(([k,v])=>`<tr><td class="muted">${esc(k)}</td><td class="right" style="font-weight:600">${esc(v)}</td></tr>`).join('')}</table></div>`:''}
+    ${mapHTML()}
+    ${related.length?`<div class="sec" style="margin-top:8px"><div class="sechead"><h2><span class="bar"></span>Sản phẩm cùng loại</h2></div><div class="grid">${related.map(shopCard).join('')}</div></div>`:''}
   </div>`;
-  $('#pBack').onclick=goShop;
+  $('#cbHome').onclick=goShop;
+  const cc=$('#cbCat');if(cc)cc.onclick=()=>{productPageId=null;active=p.cat;try{history.pushState({},'',location.pathname);}catch(e){}renderView();window.scrollTo(0,0);};
   bindProductView(p);
-  const d=$('#dAdd');if(d)d.onclick=()=>{addToCart(id,1);openCart();};
+  const qv=$('#qVal');
+  const qm=$('#qMinus');if(qm)qm.onclick=()=>{pgQty=Math.max(1,pgQty-1);qv.textContent=pgQty;};
+  const qp=$('#qPlus');if(qp)qp.onclick=()=>{pgQty=pgQty+1;qv.textContent=pgQty;};
+  const d=$('#dAdd');if(d)d.onclick=()=>{addToCart(id,pgQty);};
+  const buy=$('#dBuy');if(buy)buy.onclick=()=>{addToCart(id,pgQty);openCart();};
   bindShopCards();
-  document.title=p.name+' · '+(settings.shop||'Nội Thất Đại Thiên');
+  applySEO(p);
 }
 
 /* -------- GIỎ HÀNG -------- */
@@ -1471,7 +1540,7 @@ function editStaff(id){
 /* ====================== QUẢN TRỊ: CÀI ĐẶT ====================== */
 const BANKS=[['','— Chọn ngân hàng —'],['970436','Vietcombank'],['970415','VietinBank'],['970418','BIDV'],['970405','Agribank'],['970422','MB Bank'],['970407','Techcombank'],['970416','ACB'],['970432','VPBank'],['970423','TPBank'],['970403','Sacombank'],['970448','OCB'],['970441','VIB'],['970426','MSB'],['970443','SHB'],['970440','SeABank']];
 function renderCaidat(){
-  const b=settings.bank||{};
+  const b=settings.bank||{},t=settings.track||{};
   $('#view').innerHTML=`<h2>Cài đặt hệ thống</h2>
     <div class="grid2">
       <div class="card"><h3>Thông tin cửa hàng</h3>
@@ -1497,6 +1566,14 @@ function renderCaidat(){
           <p class="hint" style="margin:0 0 8px">Đang đăng nhập: <b>${esc(session.staff?session.staff.name:'')}</b> · <b>${esc(session.staff?session.staff.email:'')}</b></p>
           <div class="setrow"><label>Đổi mật khẩu tài khoản này (≥ 6 ký tự)</label><input id="cPass" type="text" placeholder="Để trống nếu không đổi"></div>
         </div>
+        <div class="card" style="margin-bottom:18px"><h3>📈 Mã theo dõi &amp; quảng cáo</h3>
+          <p class="hint" style="margin:0 0 10px">Dán <b>ID</b> từ các nền tảng để đo lượt truy cập / chạy quảng cáo. Để trống nếu chưa dùng.</p>
+          <div class="row"><div class="setrow"><label>Google Analytics (GA4)</label><input id="cGa" value="${esc(t.ga)}" placeholder="G-XXXXXXX"></div>
+            <div class="setrow"><label>Google Tag Manager</label><input id="cGtm" value="${esc(t.gtm)}" placeholder="GTM-XXXXXX"></div></div>
+          <div class="row"><div class="setrow"><label>Facebook Pixel ID</label><input id="cFb" value="${esc(t.fbpixel)}" placeholder="1234567890"></div>
+            <div class="setrow"><label>TikTok Pixel ID</label><input id="cTt" value="${esc(t.tiktok)}" placeholder="CXXXXXXXXX"></div></div>
+          <div class="setrow"><label>Mã tùy chỉnh khác (dán nguyên đoạn &lt;script&gt;…)</label><textarea id="cHead" rows="3" placeholder="vd: mã xác minh Google, mã YouTube, mã chuyển đổi...">${esc(t.headhtml)}</textarea></div>
+        </div>
         <div class="card"><h3>Kết nối nâng cao (tùy chọn)</h3>
           <div class="setrow"><label>URL Google Apps Script (gửi đơn về Sheet/email)</label><input id="cAppsUrl" value="${esc(settings.appsScriptUrl)}" placeholder="https://script.google.com/.../exec"></div>
           <p class="hint">Có thì đơn khách sẽ tự gửi về đây. Dùng cho Giai đoạn 3.</p>
@@ -1508,6 +1585,7 @@ function renderCaidat(){
     Object.assign(settings,{shop:$('#cShop').value.trim(),sub:$('#cSub').value.trim(),slogan:$('#cSlogan').value.trim(),
       phone:$('#cPhone').value.trim(),zalo:$('#cZalo').value.trim(),address:$('#cAddr').value.trim(),note:$('#cNote').value.trim(),
       showPrice:$('#cShowPrice').checked,appsScriptUrl:$('#cAppsUrl').value.trim(),
+      track:{ga:$('#cGa').value.trim(),gtm:$('#cGtm').value.trim(),fbpixel:$('#cFb').value.trim(),tiktok:$('#cTt').value.trim(),headhtml:$('#cHead').value},
       bank:{bin:$('#cBank').value,acc:$('#cAcc').value.trim(),name:$('#cAccName').value.trim()}});
     const np=$('#cPass').value;
     if(np){if(np.length<6){toast('Mật khẩu mới phải ≥ 6 ký tự');return;}const {error}=await DB.updatePassword(np);if(error){toast('Đổi mật khẩu lỗi: '+error.message);return;}toast('Đã đổi mật khẩu');}
@@ -1560,5 +1638,5 @@ $('#fileBanner').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f
 $('#fileLogo').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,600,async d=>{settings.logo=d;await saveSet();renderBrand();const lp=$('#logoPrev');if(lp)lp.innerHTML=`<img src="${d}">`;const ld=$('#logoDel');if(ld)ld.style.display='block';toast('Đã cập nhật logo');});e.target.value='';};
 
 /* ====================== KHỞI ĐỘNG ====================== */
-(async()=>{await DB.init();await load();productPageId=new URLSearchParams(location.search).get('p');renderBrand();renderTopAct();renderTabs();renderView();subscribeRealtime();})();
+(async()=>{await DB.init();await load();productPageId=new URLSearchParams(location.search).get('p');renderBrand();renderTopAct();renderTabs();renderView();injectTracking();subscribeRealtime();})();
 </script>
