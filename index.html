@@ -1053,9 +1053,14 @@ function heroOne(cfg,opts){
   const cls=`hero${cfg.image?' has-img':''}${heroHasText(cfg)?' has-text':''} v-${cfg.valign||'bottom'} h-${cfg.halign||'left'}`;
   return `<section class="${cls}">${heroBgHTML(cfg)}<div class="hero-inner">${heroInner(cfg,opts)}</div></section>`;
 }
+// Cấu hình HIỂN THỊ thực tế: điện thoại chưa có ảnh riêng -> mượn ảnh máy tính cho nhất quán
+function effHero(dev){
+  const h=settings.hero||{},dk=h.desktop||{},cur=h[dev]||{};
+  if(dev==='desktop'||cur.image)return cur;
+  return Object.assign({},cur,{image:dk.image||'',imgPos:dk.imgPos||'50% 50%',imgZoom:dk.imgZoom||100});
+}
 function heroHTML(){
-  const h=settings.hero||{};
-  return `<div class="herowrap-d">${heroOne(h.desktop)}</div><div class="herowrap-m">${heroOne(h.mobile)}</div>`;
+  return `<div class="herowrap-d">${heroOne(effHero('desktop'))}</div><div class="herowrap-m">${heroOne(effHero('mobile'))}</div>`;
 }
 function trustHTML(){
   const items=(settings.trust||[]).filter(x=>x&&(x.t||x.ic));
@@ -1511,14 +1516,17 @@ function printTags(ids){
 const POSCELLS=[['top','left'],['top','center'],['top','right'],['center','left'],['center','center'],['center','right'],['bottom','left'],['bottom','center'],['bottom','right']];
 function ghCur(){return window._gh[window._gd||'desktop'];}
 function gdPreview(){
-  const gh=ghCur();const el=$('#gdPrev');if(!el)return;
+  const raw=ghCur();const el=$('#gdPrev');if(!el)return;
   const mob=(window._gd==='mobile');
+  // GIỐNG HỆT hiển thị thật: điện thoại chưa có ảnh riêng -> mượn ảnh máy tính
+  const borrow=(mob && !raw.image && window._gh.desktop.image);
+  const gh=borrow?Object.assign({},raw,{image:window._gh.desktop.image,imgPos:window._gh.desktop.imgPos,imgZoom:window._gh.desktop.imgZoom}):raw;
   el.style.maxWidth=mob?'380px':'';el.style.margin=mob?'0 auto 10px':'0 0 10px';
   if(gh.image&&!heroHasText(gh)){el.className='herofull';el.style.minHeight='';el.innerHTML=`<img src="${esc(gh.image)}" alt="">`;return;}
   el.style.minHeight='';
   el.className=`hero gdmini${gh.image?' has-img':''}${heroHasText(gh)?' has-text':''} v-${gh.valign||'bottom'} h-${gh.halign||'left'}`;
   el.innerHTML=heroBgHTML(gh)+`<div class="hero-inner">${heroInner(gh,{preview:true})}</div>`;
-  bindGdDrag();
+  if(!borrow)bindGdDrag();
 }
 function bindGdDrag(){
   const el=$('#gdPrev');if(!el)return;const img=el.querySelector('.hero-bg');if(!img)return;
@@ -1553,9 +1561,10 @@ function renderGiaodien(){
          </div>
          <p class="hint" style="margin:0 0 8px">🖱️ <b>Kéo trực tiếp trên ảnh</b> để chỉnh vị trí (như ảnh bìa Facebook). Ảnh, nút và chữ của <b>máy tính</b> và <b>điện thoại</b> chỉnh riêng.</p>
          <section class="hero gdmini" id="gdPrev" style="margin:0 0 10px;border-radius:12px"></section>
+         <p class="hint" id="shareNote" style="display:none;margin:-2px 0 8px;color:#B5531A"><b>Điện thoại đang dùng chung ảnh máy tính.</b> Tải ảnh riêng bên dưới nếu muốn ảnh khác.</p>
          <div class="row"><label class="filebtn" for="fileBanner" style="flex:1;text-align:center">📤 Tải ảnh bìa</label>
            <button class="btn alt sm" id="bDel" style="flex:0 0 96px;display:${h.image?'block':'none'}">Xóa ảnh</button></div>
-         <p class="hint" id="bannerHint">Banner thiết kế sẵn (có chữ) sẽ hiện <b>đầy đủ, không cắt</b>. Ảnh máy tính nên <b>ngang</b>; ảnh điện thoại nên <b>vuông/dọc</b> cho vừa màn hình.</p>
+         <p class="hint" id="bannerHint"></p>
          <div class="setrow" id="zoomRow" style="margin-top:10px;display:${h.image?'block':'none'}"><label>Phóng to ảnh — <span id="zoomVal">${h.imgZoom||100}%</span></label><input type="range" id="gZoom" min="100" max="220" step="2" value="${h.imgZoom||100}" style="width:100%"></div>
          <div class="setrow"><label>Vị trí khối chữ &amp; nút (bấm 1 ô)</label><div class="posgrid" id="posGrid"></div></div>
          <div class="setrow"><label>Dòng nhỏ phía trên <span class="muted">(để trống nếu banner đã có chữ)</span></label><input id="gEyebrow" value="${esc(h.eyebrow)}"></div>
@@ -1599,12 +1608,18 @@ function renderGiaodien(){
   // --- Banner: xem trước trực tiếp ---
   // nạp lại các ô của thiết bị đang chọn (gọi khi đổi tab thiết bị)
   function loadBannerFields(){
-    const c=ghCur();
+    const c=ghCur();const mob=(window._gd==='mobile');
     $('#gEyebrow').value=c.eyebrow||'';$('#gTitle').value=c.title||'';$('#gDesc').value=c.desc||'';$('#gBtn').value=c.btn||'';
     const gz=$('#gZoom');if(gz)gz.value=c.imgZoom||100;$('#zoomVal').textContent=(c.imgZoom||100)+'%';
     $('#zoomRow').style.display=c.image?'block':'none';
     $('#bDel').style.display=c.image?'block':'none';
     $('#posGrid').querySelectorAll('.poscell').forEach(x=>x.classList.toggle('on',x.dataset.v===(c.valign||'bottom')&&x.dataset.h===(c.halign||'left')));
+    // gợi ý kích thước ảnh theo thiết bị
+    $('#bannerHint').innerHTML = mob
+      ? 'Khuyên dùng ảnh <b>vuông hoặc dọc · ~1080×1080 đến 1080×1350px</b> (tỷ lệ 1:1–4:5). Banner có chữ sẽ hiện đầy đủ, không cắt.'
+      : 'Khuyên dùng ảnh <b>ngang · ~1600×600px</b> (tỷ lệ ~8:3). Banner thiết kế sẵn (có chữ) sẽ hiện đầy đủ, không cắt.';
+    // điện thoại chưa có ảnh riêng -> báo đang dùng chung ảnh máy tính
+    $('#shareNote').style.display = (mob && !c.image && window._gh.desktop.image) ? 'block' : 'none';
     gdPreview();
   }
   // chuyển tab thiết bị
@@ -1613,12 +1628,12 @@ function renderGiaodien(){
     $('#devTabs').querySelectorAll('[data-dev]').forEach(x=>x.classList.toggle('alt',x!==b));
     loadBannerFields();
   });
-  gdPreview();
   // ô chữ -> cập nhật preview ngay
   [['gEyebrow','eyebrow'],['gTitle','title'],['gDesc','desc'],['gBtn','btn']].forEach(([id,key])=>{const el=$('#'+id);if(el)el.oninput=()=>{ghCur()[key]=el.value;gdPreview();};});
   // lưới vị trí khối chữ/nút
-  $('#posGrid').innerHTML=POSCELLS.map(([v,hh])=>`<button class="poscell ${(ghCur().valign===v&&ghCur().halign===hh)?'on':''}" data-v="${v}" data-h="${hh}"></button>`).join('');
+  $('#posGrid').innerHTML=POSCELLS.map(([v,hh])=>`<button class="poscell" data-v="${v}" data-h="${hh}"></button>`).join('');
   $('#posGrid').querySelectorAll('.poscell').forEach(b=>b.onclick=()=>{ghCur().valign=b.dataset.v;ghCur().halign=b.dataset.h;$('#posGrid').querySelectorAll('.poscell').forEach(x=>x.classList.toggle('on',x===b));gdPreview();});
+  loadBannerFields();
   // zoom
   const gz=$('#gZoom');if(gz)gz.oninput=()=>{ghCur().imgZoom=+gz.value;$('#zoomVal').textContent=gz.value+'%';gdPreview();};
   // xóa ảnh bìa
