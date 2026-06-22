@@ -177,6 +177,7 @@
   .hero-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;transform-origin:center}
   .herofull{border-radius:14px;overflow:hidden;margin:4px 0 36px;display:block}
   .herofull img,.herofull picture{width:100%;height:auto;display:block}
+  .herowrap-m{display:none}
   .hero:not(.has-img)::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(95deg,rgba(210,102,31,.22),transparent 58%);pointer-events:none}
   .hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:320px;height:320px;border:1px solid rgba(163,177,138,.22);border-radius:50%;box-shadow:0 0 0 30px rgba(163,177,138,.06);z-index:1}
   .hero.has-img::after{display:none}
@@ -427,7 +428,7 @@
     h2{font-size:18px}
   }
   /* override cuối cùng (thắng các rule nền đặt sau) cho đầu trang điện thoại */
-  @media (max-width:640px){ body.shopping .annbar{display:none} .brand .bnames{display:none} }
+  @media (max-width:640px){ body.shopping .annbar{display:none} .brand .bnames{display:none} .herowrap-d{display:none} .herowrap-m{display:block} }
 </style>
 
 <!-- ============ THANH THÔNG BÁO (chỉ khu cửa hàng) ============ -->
@@ -469,7 +470,6 @@
 <input type="file" id="fileImg" accept="image/*" hidden>
 <input type="file" id="fileGallery" accept="image/*" multiple hidden>
 <input type="file" id="fileBanner" accept="image/*" hidden>
-<input type="file" id="fileBannerM" accept="image/*" hidden>
 <input type="file" id="fileLogo" accept="image/*" hidden>
 <input type="file" id="fileIn" accept="application/json" hidden>
 <div id="printArea"></div>
@@ -622,7 +622,10 @@ const DEFSET={
   logo:'', // ảnh logo (PNG) hiện ở header; để trống = dùng ô chữ "ĐT"
   track:{ga:'',gtm:'',fbpixel:'',tiktok:'',headhtml:''}, // mã theo dõi Google/GTM/Facebook/TikTok + mã tùy chỉnh
   bank:{bin:'',acc:'',name:''},
-  hero:{eyebrow:'', title:'', desc:'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn. Mua sắm dễ dàng cho phòng khách, phòng ngủ, phòng ăn và hơn thế nữa.', btn:'Khám phá sản phẩm', image:'', imageMobile:'', imgPos:'50% 50%', imgZoom:100, valign:'bottom', halign:'left'},
+  hero:{
+    desktop:{image:'', eyebrow:'', title:'', desc:'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn. Mua sắm dễ dàng cho phòng khách, phòng ngủ, phòng ăn và hơn thế nữa.', btn:'Khám phá sản phẩm', imgPos:'50% 50%', imgZoom:100, valign:'bottom', halign:'left'},
+    mobile:{image:'', eyebrow:'', title:'', desc:'', btn:'', imgPos:'50% 50%', imgZoom:100, valign:'bottom', halign:'left'}
+  },
   ann:{show:true, text:'An toàn sức khỏe · Giao lắp tận nơi · Bảo hành dài hạn'},
   trust:[{ic:'truck',t:'Miễn phí giao lắp',d:'Khu vực nội thành'},{ic:'refresh',t:'Đổi trả dễ dàng',d:'Trong 7 ngày'},{ic:'shield',t:'Bảo hành dài hạn',d:'Yên tâm sử dụng'},{ic:'pencil',t:'Tư vấn thiết kế',d:'Hoàn toàn miễn phí'}],
   footer:{about:'', email:'cskh@daithien.vn', hours:'8:00 – 21:00', fb:'', yt:'', ig:'', tiktok:'', policies:'Giao hàng & lắp đặt\nChính sách bảo hành\nĐổi trả hàng\nBảo mật thông tin'}
@@ -637,10 +640,20 @@ const SAMPLE=[
 ];
 
 /* ====================== NẠP DỮ LIỆU ====================== */
+function heroCfgDefaults(d){return Object.assign({image:'',eyebrow:'',title:'',desc:'',btn:'',imgPos:'50% 50%',imgZoom:100,valign:'bottom',halign:'left'},d||{});}
+function normHero(h){
+  h=h||{};
+  if(h.desktop||h.mobile)return {desktop:heroCfgDefaults(h.desktop),mobile:heroCfgDefaults(h.mobile)};
+  // cấu hình CŨ (phẳng) -> chuyển sang desktop; imageMobile -> mobile.image
+  return {
+    desktop:heroCfgDefaults({image:h.image,eyebrow:h.eyebrow,title:h.title,desc:h.desc,btn:(h.btn!=null?h.btn:'Khám phá sản phẩm'),imgPos:h.imgPos,imgZoom:h.imgZoom,valign:h.valign,halign:h.halign}),
+    mobile:heroCfgDefaults({image:h.imageMobile||''})
+  };
+}
 function applySettings(raw){
   settings=Object.assign({},DEFSET,raw||{});
   settings.bank=Object.assign({bin:'',acc:'',name:''},settings.bank||{});
-  settings.hero=Object.assign({},DEFSET.hero,settings.hero||{});
+  settings.hero=normHero(settings.hero);
   settings.ann=Object.assign({},DEFSET.ann,settings.ann||{});
   settings.footer=Object.assign({},DEFSET.footer,settings.footer||{});
   settings.track=Object.assign({},DEFSET.track,settings.track||{});
@@ -1020,7 +1033,7 @@ function heroInner(h,opts){
   const title=h.title||(hasImg?'':(settings.slogan||'Nội thất bền đẹp cho tổ ấm của bạn'));
   const desc=h.desc||(hasImg?'':'Sản phẩm chính hãng · giao lắp tận nơi · bảo hành dài hạn.');
   const btn=(h.btn==null?'Khám phá sản phẩm':h.btn);
-  const exploreBtn = !btn ? '' : (opts.preview?`<span class="hbtn">${esc(btn)} →</span>`:`<button class="hbtn" id="heroShop">${esc(btn)} →</button>`);
+  const exploreBtn = !btn ? '' : (opts.preview?`<span class="hbtn">${esc(btn)} →</span>`:`<button class="hbtn heroShop">${esc(btn)} →</button>`);
   const phoneBtn = (btn&&settings.phone) ? (opts.preview?`<span class="hbtn ghost">${svgIcon('phone',13)} ${esc(settings.phone)}</span>`:`<a class="hbtn ghost" href="${telLink()}">${svgIcon('phone',15)} ${esc(settings.phone)}</a>`) : '';
   return `${eyebrow?`<div class="eyebrow">${esc(eyebrow)}</div>`:''}
     ${title?`<h1>${esc(title)}</h1>`:''}
@@ -1033,16 +1046,16 @@ function heroBgHTML(h){
   return `<img class="hero-bg" src="${esc(h.image)}" alt="" style="object-position:${esc(h.imgPos||'50% 50%')};transform:scale(${z})">`;
 }
 function heroHasText(h){return h.image?!!(h.eyebrow||h.title||h.desc||h.btn):true;}
-function heroPicture(h){ // ảnh đầy đủ; có ảnh mobile riêng thì dùng <picture>
-  if(h.imageMobile)return `<picture><source media="(max-width:560px)" srcset="${esc(h.imageMobile)}"><img src="${esc(h.image)}" alt="${esc(settings.shop||'')}"></picture>`;
-  return `<img src="${esc(h.image)}" alt="${esc(settings.shop||'')}">`;
+function heroOne(cfg,opts){
+  cfg=cfg||{};opts=opts||{};
+  // Banner thiết kế sẵn (có ảnh, không chữ đè) -> hiện ĐẦY ĐỦ, không cắt
+  if(cfg.image&&!heroHasText(cfg))return `<section class="herofull"><img src="${esc(cfg.image)}" alt="${esc(settings.shop||'')}"></section>`;
+  const cls=`hero${cfg.image?' has-img':''}${heroHasText(cfg)?' has-text':''} v-${cfg.valign||'bottom'} h-${cfg.halign||'left'}`;
+  return `<section class="${cls}">${heroBgHTML(cfg)}<div class="hero-inner">${heroInner(cfg,opts)}</div></section>`;
 }
 function heroHTML(){
   const h=settings.hero||{};
-  // Banner thiết kế sẵn (có ảnh, không chữ đè) -> hiện ĐẦY ĐỦ, không cắt
-  if(h.image&&!heroHasText(h))return `<section class="herofull">${heroPicture(h)}</section>`;
-  const cls=`hero${h.image?' has-img':''}${heroHasText(h)?' has-text':''} v-${h.valign||'bottom'} h-${h.halign||'left'}`;
-  return `<section class="${cls}">${heroBgHTML(h)}<div class="hero-inner">${heroInner(h)}</div></section>`;
+  return `<div class="herowrap-d">${heroOne(h.desktop)}</div><div class="herowrap-m">${heroOne(h.mobile)}</div>`;
 }
 function trustHTML(){
   const items=(settings.trust||[]).filter(x=>x&&(x.t||x.ic));
@@ -1096,7 +1109,7 @@ function renderShop(){
   $('#view').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{active=b.dataset.cat;renderShop();window.scrollTo({top:0,behavior:'smooth'});});
   $('#view').querySelectorAll('.catchip').forEach(b=>b.onclick=()=>{active=b.dataset.c;renderShop();});
   const q=$('#q');if(q)q.oninput=e=>{search=e.target.value.trim();const l=shopFiltered();$('#grid').innerHTML=l.length?l.map(shopCard).join(''):`<div class="empty" style="grid-column:1/-1">Không tìm thấy sản phẩm phù hợp.</div>`;bindShopCards();};
-  const hb=$('#heroShop');if(hb)hb.onclick=()=>{const sb=$('#q');if(sb){sb.scrollIntoView({behavior:'smooth',block:'center'});sb.focus();}};
+  $('#view').querySelectorAll('.heroShop').forEach(hb=>hb.onclick=()=>{const sb=$('#q')||$('#mSearch');if(sb){sb.scrollIntoView({behavior:'smooth',block:'center'});sb.focus();}});
   bindShopCards();
 }
 function bindShopCards(){
@@ -1496,9 +1509,12 @@ function printTags(ids){
 
 /* ====================== QUẢN TRỊ: GIAO DIỆN TRANG BÁN HÀNG ====================== */
 const POSCELLS=[['top','left'],['top','center'],['top','right'],['center','left'],['center','center'],['center','right'],['bottom','left'],['bottom','center'],['bottom','right']];
+function ghCur(){return window._gh[window._gd||'desktop'];}
 function gdPreview(){
-  const gh=window._gh;const el=$('#gdPrev');if(!el)return;
-  if(gh.image&&!heroHasText(gh)){el.className='herofull';el.style.minHeight='';el.innerHTML=heroPicture(gh);return;}
+  const gh=ghCur();const el=$('#gdPrev');if(!el)return;
+  const mob=(window._gd==='mobile');
+  el.style.maxWidth=mob?'380px':'';el.style.margin=mob?'0 auto 10px':'0 0 10px';
+  if(gh.image&&!heroHasText(gh)){el.className='herofull';el.style.minHeight='';el.innerHTML=`<img src="${esc(gh.image)}" alt="">`;return;}
   el.style.minHeight='';
   el.className=`hero gdmini${gh.image?' has-img':''}${heroHasText(gh)?' has-text':''} v-${gh.valign||'bottom'} h-${gh.halign||'left'}`;
   el.innerHTML=heroBgHTML(gh)+`<div class="hero-inner">${heroInner(gh,{preview:true})}</div>`;
@@ -1507,16 +1523,19 @@ function gdPreview(){
 function bindGdDrag(){
   const el=$('#gdPrev');if(!el)return;const img=el.querySelector('.hero-bg');if(!img)return;
   let drag=false,sx,sy,px,py;
-  const cur=()=>{const p=(window._gh.imgPos||'50% 50%').split(' ').map(parseFloat);return{x:isNaN(p[0])?50:p[0],y:isNaN(p[1])?50:p[1]};};
+  const cur=()=>{const p=(ghCur().imgPos||'50% 50%').split(' ').map(parseFloat);return{x:isNaN(p[0])?50:p[0],y:isNaN(p[1])?50:p[1]};};
   img.onpointerdown=e=>{drag=true;el.style.cursor='grabbing';sx=e.clientX;sy=e.clientY;const c=cur();px=c.x;py=c.y;try{img.setPointerCapture(e.pointerId);}catch(_){}e.preventDefault();};
   img.onpointermove=e=>{if(!drag)return;const dx=e.clientX-sx,dy=e.clientY-sy;
     const nx=Math.min(100,Math.max(0,px-dx/el.clientWidth*100)), ny=Math.min(100,Math.max(0,py-dy/el.clientHeight*100));
-    window._gh.imgPos=Math.round(nx)+'% '+Math.round(ny)+'%';img.style.objectPosition=window._gh.imgPos;};
+    ghCur().imgPos=Math.round(nx)+'% '+Math.round(ny)+'%';img.style.objectPosition=ghCur().imgPos;};
   const stop=()=>{drag=false;el.style.cursor='grab';};img.onpointerup=stop;img.onpointercancel=stop;
 }
 function renderGiaodien(){
-  const h=settings.hero||{},a=settings.ann||{},f=settings.footer||{};
-  window._gh=JSON.parse(JSON.stringify(Object.assign({eyebrow:'',title:'',desc:'',btn:'',image:'',imgPos:'50% 50%',imgZoom:100,valign:'bottom',halign:'left'},h)));
+  const a=settings.ann||{},f=settings.footer||{};
+  window._gh={desktop:heroCfgDefaults(settings.hero.desktop),mobile:heroCfgDefaults(settings.hero.mobile)};
+  window._gh=JSON.parse(JSON.stringify(window._gh));
+  window._gd=window._gd||'desktop';
+  const h=ghCur();
   $('#view').innerHTML=`<div class="sectitle"><h2 style="margin:0">Giao diện trang bán hàng</h2>
     <button class="btn sm alt" id="gPreview">👁 Xem trang bán hàng</button></div>
    <div class="grid2">
@@ -1528,13 +1547,15 @@ function renderGiaodien(){
          <p class="hint">PNG nền trong, dạng ngang. Sẽ hiện ở đầu trang &amp; làm favicon (icon trên tab trình duyệt).</p>
        </div>
        <div class="card" style="margin-bottom:18px"><h3>🖼️ Banner đầu trang</h3>
-         <p class="hint" style="margin:0 0 8px">🖱️ <b>Kéo trực tiếp trên ảnh</b> để chỉnh vị trí (như ảnh bìa Facebook).</p>
+         <div class="devtabs" id="devTabs" style="display:flex;gap:8px;margin-bottom:12px">
+           <button class="btn sm ${window._gd==='desktop'?'':'alt'}" data-dev="desktop" style="flex:1">🖥️ Máy tính (web)</button>
+           <button class="btn sm ${window._gd==='mobile'?'':'alt'}" data-dev="mobile" style="flex:1">📱 Điện thoại</button>
+         </div>
+         <p class="hint" style="margin:0 0 8px">🖱️ <b>Kéo trực tiếp trên ảnh</b> để chỉnh vị trí (như ảnh bìa Facebook). Ảnh, nút và chữ của <b>máy tính</b> và <b>điện thoại</b> chỉnh riêng.</p>
          <section class="hero gdmini" id="gdPrev" style="margin:0 0 10px;border-radius:12px"></section>
-         <div class="row"><label class="filebtn" for="fileBanner" style="flex:1;text-align:center">📤 Tải ảnh bìa (máy tính)</label>
+         <div class="row"><label class="filebtn" for="fileBanner" style="flex:1;text-align:center">📤 Tải ảnh bìa</label>
            <button class="btn alt sm" id="bDel" style="flex:0 0 96px;display:${h.image?'block':'none'}">Xóa ảnh</button></div>
-         <div class="row" style="margin-top:8px"><label class="filebtn" for="fileBannerM" style="flex:1;text-align:center">📱 Tải ảnh bìa cho điện thoại ${h.imageMobile?'✓':''}</label>
-           <button class="btn alt sm" id="bDelM" style="flex:0 0 96px;display:${h.imageMobile?'block':'none'}">Xóa</button></div>
-         <p class="hint">Banner thiết kế sẵn (có chữ) sẽ hiện <b>đầy đủ, không cắt</b>. Ảnh máy tính nên ngang; ảnh điện thoại nên <b>vuông/dọc</b> cho vừa màn hình.</p>
+         <p class="hint" id="bannerHint">Banner thiết kế sẵn (có chữ) sẽ hiện <b>đầy đủ, không cắt</b>. Ảnh máy tính nên <b>ngang</b>; ảnh điện thoại nên <b>vuông/dọc</b> cho vừa màn hình.</p>
          <div class="setrow" id="zoomRow" style="margin-top:10px;display:${h.image?'block':'none'}"><label>Phóng to ảnh — <span id="zoomVal">${h.imgZoom||100}%</span></label><input type="range" id="gZoom" min="100" max="220" step="2" value="${h.imgZoom||100}" style="width:100%"></div>
          <div class="setrow"><label>Vị trí khối chữ &amp; nút (bấm 1 ô)</label><div class="posgrid" id="posGrid"></div></div>
          <div class="setrow"><label>Dòng nhỏ phía trên <span class="muted">(để trống nếu banner đã có chữ)</span></label><input id="gEyebrow" value="${esc(h.eyebrow)}"></div>
@@ -1576,23 +1597,38 @@ function renderGiaodien(){
    <div style="max-width:320px;margin-top:18px"><button class="btn" id="gSave">Lưu giao diện</button></div>`;
   $('#gPreview').onclick=()=>{area='shop';document.querySelectorAll('.area').forEach(x=>x.setAttribute('aria-pressed',x.dataset.area==='shop'));renderTopAct();renderTabs();renderView();window.scrollTo(0,0);};
   // --- Banner: xem trước trực tiếp ---
+  // nạp lại các ô của thiết bị đang chọn (gọi khi đổi tab thiết bị)
+  function loadBannerFields(){
+    const c=ghCur();
+    $('#gEyebrow').value=c.eyebrow||'';$('#gTitle').value=c.title||'';$('#gDesc').value=c.desc||'';$('#gBtn').value=c.btn||'';
+    const gz=$('#gZoom');if(gz)gz.value=c.imgZoom||100;$('#zoomVal').textContent=(c.imgZoom||100)+'%';
+    $('#zoomRow').style.display=c.image?'block':'none';
+    $('#bDel').style.display=c.image?'block':'none';
+    $('#posGrid').querySelectorAll('.poscell').forEach(x=>x.classList.toggle('on',x.dataset.v===(c.valign||'bottom')&&x.dataset.h===(c.halign||'left')));
+    gdPreview();
+  }
+  // chuyển tab thiết bị
+  $('#devTabs').querySelectorAll('[data-dev]').forEach(b=>b.onclick=()=>{
+    window._gd=b.dataset.dev;
+    $('#devTabs').querySelectorAll('[data-dev]').forEach(x=>x.classList.toggle('alt',x!==b));
+    loadBannerFields();
+  });
   gdPreview();
   // ô chữ -> cập nhật preview ngay
-  [['gEyebrow','eyebrow'],['gTitle','title'],['gDesc','desc'],['gBtn','btn']].forEach(([id,key])=>{const el=$('#'+id);if(el)el.oninput=()=>{window._gh[key]=el.value;gdPreview();};});
+  [['gEyebrow','eyebrow'],['gTitle','title'],['gDesc','desc'],['gBtn','btn']].forEach(([id,key])=>{const el=$('#'+id);if(el)el.oninput=()=>{ghCur()[key]=el.value;gdPreview();};});
   // lưới vị trí khối chữ/nút
-  $('#posGrid').innerHTML=POSCELLS.map(([v,hh])=>`<button class="poscell ${(window._gh.valign===v&&window._gh.halign===hh)?'on':''}" data-v="${v}" data-h="${hh}"></button>`).join('');
-  $('#posGrid').querySelectorAll('.poscell').forEach(b=>b.onclick=()=>{window._gh.valign=b.dataset.v;window._gh.halign=b.dataset.h;$('#posGrid').querySelectorAll('.poscell').forEach(x=>x.classList.toggle('on',x===b));gdPreview();});
+  $('#posGrid').innerHTML=POSCELLS.map(([v,hh])=>`<button class="poscell ${(ghCur().valign===v&&ghCur().halign===hh)?'on':''}" data-v="${v}" data-h="${hh}"></button>`).join('');
+  $('#posGrid').querySelectorAll('.poscell').forEach(b=>b.onclick=()=>{ghCur().valign=b.dataset.v;ghCur().halign=b.dataset.h;$('#posGrid').querySelectorAll('.poscell').forEach(x=>x.classList.toggle('on',x===b));gdPreview();});
   // zoom
-  const gz=$('#gZoom');if(gz)gz.oninput=()=>{window._gh.imgZoom=+gz.value;$('#zoomVal').textContent=gz.value+'%';gdPreview();};
+  const gz=$('#gZoom');if(gz)gz.oninput=()=>{ghCur().imgZoom=+gz.value;$('#zoomVal').textContent=gz.value+'%';gdPreview();};
   // xóa ảnh bìa
-  const bd=$('#bDel');if(bd)bd.onclick=()=>{window._gh.image='';$('#zoomRow').style.display='none';bd.style.display='none';gdPreview();toast('Đã bỏ ảnh — bấm Lưu để áp dụng');};
-  const bdm=$('#bDelM');if(bdm)bdm.onclick=()=>{window._gh.imageMobile='';bdm.style.display='none';gdPreview();toast('Đã bỏ ảnh điện thoại — bấm Lưu');};
+  const bd=$('#bDel');if(bd)bd.onclick=()=>{ghCur().image='';$('#zoomRow').style.display='none';bd.style.display='none';gdPreview();toast('Đã bỏ ảnh — bấm Lưu để áp dụng');};
   // logo
   const ld=$('#logoDel');if(ld)ld.onclick=async()=>{settings.logo='';await saveSet();renderBrand();$('#logoPrev').innerHTML='<span class="muted" style="font-size:12.5px">Chưa có logo</span>';ld.style.display='none';toast('Đã xóa logo');};
   $('#gSave').onclick=async()=>{
-    // gom các ô chữ vào _gh rồi lưu toàn bộ hero
-    window._gh.eyebrow=$('#gEyebrow').value.trim();window._gh.title=$('#gTitle').value.trim();window._gh.desc=$('#gDesc').value.trim();window._gh.btn=$('#gBtn').value.trim();
-    Object.assign(settings.hero,window._gh);
+    // gom các ô chữ (thiết bị đang xem) vào _gh rồi lưu toàn bộ hero 2 thiết bị
+    const c=ghCur();c.eyebrow=$('#gEyebrow').value.trim();c.title=$('#gTitle').value.trim();c.desc=$('#gDesc').value.trim();c.btn=$('#gBtn').value.trim();
+    settings.hero={desktop:window._gh.desktop,mobile:window._gh.mobile};
     Object.assign(settings.ann,{show:$('#gAnnShow').checked,text:$('#gAnnText').value.trim()});
     $('#gTrust').querySelectorAll('input').forEach(inp=>{const i=+inp.dataset.ti,k=inp.dataset.tk;if(settings.trust[i])settings.trust[i][k]=inp.value;});
     Object.assign(settings.footer,{about:$('#gAbout').value.trim(),email:$('#gEmail').value.trim(),hours:$('#gHours').value.trim(),fb:$('#gFb').value.trim(),yt:$('#gYt').value.trim(),ig:$('#gIg').value.trim(),tiktok:$('#gTiktok').value.trim(),policies:$('#gPolicies').value});
@@ -1753,15 +1789,12 @@ function resizeImg(file,max,cb){const img=new Image();const url=URL.createObject
     const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(url);cb(c.toDataURL('image/jpeg',0.82));};img.src=url;}
 $('#fileGallery').onchange=e=>{const files=[...e.target.files];if(!files.length)return;window._kImgs=window._kImgs||[];
   let done=0;files.forEach(f=>resizeImg(f,1000,d=>{window._kImgs.push(d);if(++done===files.length)renderKGallery();}));e.target.value='';};
-$('#fileBanner').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,1600,d=>{
-  window._gh=window._gh||JSON.parse(JSON.stringify(settings.hero));
-  window._gh.image=d;window._gh.imgPos='50% 50%';window._gh.imgZoom=100;
+$('#fileBanner').onchange=e=>{const f=e.target.files[0];if(!f)return;const mob=(window._gd==='mobile');resizeImg(f,mob?1200:1600,d=>{
+  const c=ghCur();
+  c.image=d;c.imgPos='50% 50%';c.imgZoom=100;
   const zr=$('#zoomRow');if(zr)zr.style.display='block';const bd=$('#bDel');if(bd)bd.style.display='block';
   const gz=$('#gZoom');if(gz)gz.value=100;const zv=$('#zoomVal');if(zv)zv.textContent='100%';
   gdPreview();toast('Đã tải ảnh — kéo để chỉnh vị trí rồi bấm Lưu');});e.target.value='';};
-$('#fileBannerM').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,1200,d=>{
-  window._gh=window._gh||JSON.parse(JSON.stringify(settings.hero));window._gh.imageMobile=d;
-  const bdm=$('#bDelM');if(bdm)bdm.style.display='block';gdPreview();toast('Đã tải ảnh điện thoại — bấm Lưu');});e.target.value='';};
 $('#fileLogo').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,600,async d=>{settings.logo=d;await saveSet();renderBrand();const lp=$('#logoPrev');if(lp)lp.innerHTML=`<img src="${d}">`;const ld=$('#logoDel');if(ld)ld.style.display='block';toast('Đã cập nhật logo');});e.target.value='';};
 
 /* ====================== KHỞI ĐỘNG ====================== */
