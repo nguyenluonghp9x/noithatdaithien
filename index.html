@@ -415,6 +415,13 @@
   .nt-staff .sh{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#B89B82;display:flex;justify-content:space-between}
   .nt-staff .meta{display:flex;gap:14px;margin-top:7px;font-size:10.5px;color:#C9BCAE}.nt-staff .meta b{color:#fff}
   .hide-staff .nt-staff{display:none!important}
+  /* khổ thẻ: nhỏ A7 (74mm) · to A6 (105mm) — xem trước trên màn cũng đúng tỉ lệ */
+  .lblsheet.lblsm .nttag{width:74mm}
+  .lblsheet.lbllg .nttag{width:105mm}
+  .lblsheet.lbllg .nttag-in{padding:24px}
+  .lblsheet.lbllg .nt-name{font-size:23px}
+  .lblsheet.lbllg .nt-now{font-size:30px}
+  .lblsheet.lbllg .ntqr{width:78px;height:78px}
   .ntstk{width:230px;position:relative;border-radius:16px;color:#fff;box-shadow:0 6px 22px rgba(0,0,0,.18)}
   .ntstk-sale{background:radial-gradient(circle at 30% 0%,#C8341D 0%,#9E2412 100%);padding:20px 18px 16px;text-align:center;border-radius:16px}
   .ntstk .head{font-weight:900;font-size:15px;letter-spacing:.2em;text-transform:uppercase}
@@ -445,6 +452,8 @@
     .nttag,.ntstk{box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .nttag *,.ntstk *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .nttag{width:86mm;border:1px solid #bbb}
+    .lblsheet.lblsm .nttag{width:74mm}
+    .lblsheet.lbllg .nttag{width:105mm}
     .ntstk{width:60mm}}
   @media (max-width:860px){.grid2{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}
     .trust{grid-template-columns:1fr 1fr}.hero{padding:38px 28px;min-height:240px}.hero h1{font-size:31px}.hero::after{font-size:140px}
@@ -1547,7 +1556,7 @@ function renderBaocao(){
 /* ====================== QUẢN TRỊ: ĐƠN KHÁCH (trong Bán hàng phụ) — gộp vào báo cáo qua orders nếu cần ====================== */
 
 /* ====================== QUẢN TRỊ: IN TAG / QR ====================== */
-let tagMode='base', giftStickers=[];
+let tagMode='base', giftStickers=[], tagSize='sm';
 function productURL(p){return location.origin+location.pathname+'?p='+encodeURIComponent(p.id);}
 // ---- mẫu nhãn ----
 function lblTag(p,opt){opt=opt||{};
@@ -1602,6 +1611,7 @@ function lblPreview(){
   }else{
     html=giftStickers.map(lblGift).join('');
   }
+  sheet.className='lblsheet'+(tagMode==='base'?(tagSize==='lg'?' lbllg':' lblsm'):'');
   sheet.innerHTML=html;
   $('#lblEmpty').style.display=html?'none':'block';
 }
@@ -1611,13 +1621,20 @@ function lblPrint(){
   else if(tagMode==='sale'){const scar=$('#lblScar')?$('#lblScar').value.trim():'';const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);html=ids.map(id=>lblSale(prod(id),scar)).join('');}
   else html=giftStickers.map(lblGift).join('');
   if(!html){toast('Chưa chọn/nhập nhãn nào để in');return;}
-  $('#printArea').innerHTML=`<div class="lblsheet">${html}</div>`;window.print();
+  const szcls=tagMode==='base'?(tagSize==='lg'?' lbllg':' lblsm'):'';
+  $('#printArea').innerHTML=`<div class="lblsheet${szcls}">${html}</div>`;window.print();
 }
 function renderTag(){
   const onSale=products.filter(p=>p.salePrice&&p.salePrice<p.price);
   let pane='';
   if(tagMode==='base'){
-    pane=`<div class="card"><label class="permrow" style="background:#fff;margin-bottom:12px"><input type="checkbox" id="lblStaff"><span class="pn">In kèm <b>khối nội bộ</b> cho nhân viên (tồn kho, nhóm hàng) — nền tối phía dưới thẻ</span></label>
+    pane=`<div class="card">
+      <div class="setrow" style="margin-bottom:12px"><label>Khổ thẻ (in trên giấy A4)</label>
+        <div class="lblbar" id="lblSizeBar" style="margin-bottom:0;max-width:560px">
+          <button data-sz="sm" aria-pressed="${tagSize==='sm'}">Nhỏ · A7 (74×105mm) · 8 thẻ/A4</button>
+          <button data-sz="lg" aria-pressed="${tagSize==='lg'}">To · A6 (105×148mm) · 4 thẻ/A4</button>
+        </div></div>
+      <label class="permrow" style="background:#fff;margin-bottom:12px"><input type="checkbox" id="lblStaff"><span class="pn">In kèm <b>khối nội bộ</b> cho nhân viên (tồn kho, nhóm hàng) — nền tối phía dưới thẻ</span></label>
       <div class="sectitle"><p class="muted" style="margin:0">Chọn sản phẩm cần in thẻ</p><label style="font-size:13px"><input type="checkbox" id="lblAll"> Chọn tất cả</label></div>
       <table><thead><tr><th style="width:34px"></th><th>Tên</th><th>Mã</th><th class="num">Giá</th></tr></thead><tbody>
       ${products.map(p=>`<tr><td><input type="checkbox" class="lblChk" value="${p.id}"></td><td>${esc(p.name)}</td><td>${esc(p.sku||'—')}</td><td class="num">${fmt(sellPrice(p))}</td></tr>`).join('')}
@@ -1654,6 +1671,7 @@ function renderTag(){
       <p class="hint" id="lblEmpty">Chọn sản phẩm hoặc nhập thông tin để xem trước.</p>
     </div>`;
   $('#lblBar').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;tagMode=b.dataset.m;renderTag();};
+  const szbar=$('#lblSizeBar');if(szbar)szbar.onclick=e=>{const b=e.target.closest('[data-sz]');if(!b)return;tagSize=b.dataset.sz;szbar.querySelectorAll('[data-sz]').forEach(x=>x.setAttribute('aria-pressed',x===b));lblPreview();};
   const all=$('#lblAll');if(all)all.onchange=e=>{$('#view').querySelectorAll('.lblChk').forEach(c=>c.checked=e.target.checked);lblPreview();};
   $('#view').querySelectorAll('.lblChk').forEach(c=>c.onchange=lblPreview);
   const sc=$('#lblScar');if(sc)sc.oninput=lblPreview;
