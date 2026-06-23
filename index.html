@@ -385,10 +385,66 @@
   .logoprev img{max-height:60px;max-width:90%;object-fit:contain}
   input[type=range]{accent-color:var(--orange)}
 
+  /* ===== TEM & NHÃN SẢN PHẨM ===== */
+  .lblbar{display:flex;gap:6px;background:#F1ECE4;border-radius:11px;padding:5px;margin-bottom:16px;max-width:520px}
+  .lblbar button{flex:1;padding:9px 6px;border:0;background:transparent;border-radius:8px;cursor:pointer;font-weight:700;font-size:12.5px;color:var(--muted)}
+  .lblbar button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .lblsheet{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+  .nttag{width:300px;background:#FCFBF8;border:1px solid var(--line);border-radius:14px;position:relative;box-shadow:var(--shadow);overflow:hidden}
+  .nttag-in{padding:18px}
+  .nttag .corner{position:absolute;top:13px;right:-32px;transform:rotate(45deg);color:#fff;font-weight:800;font-size:10px;letter-spacing:.14em;padding:5px 40px;text-transform:uppercase;background:var(--warn)}
+  .nttag.reg .corner{display:none}
+  .nt-eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .nt-eyebrow .bar{width:18px;height:2px;background:var(--orange)}
+  .nttag.prem .nt-eyebrow .bar{background:var(--warn)}
+  .nt-name{font-family:var(--disp);font-weight:700;font-size:19px;line-height:1.15;margin:7px 0 2px}
+  .nt-sku{font-size:11px;color:var(--muted);letter-spacing:.05em;margin-bottom:12px}.nt-sku b{color:var(--ink)}
+  .nt-ledger{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .nt-lrow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12px;border-bottom:1px dotted var(--line)}
+  .nt-lrow:last-child{border-bottom:0}.nt-lrow .k{color:var(--muted)}.nt-lrow .v{text-align:right;font-weight:600}
+  .nt-price{margin-top:13px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .nt-price .lab{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .nt-now{font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
+  .nttag.prem .nt-now{color:var(--warn)}
+  .nt-old{font-size:13px;text-decoration:line-through;color:#9a948a;margin-top:2px}
+  .ntqr{width:62px;height:62px;flex:none;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff}
+  .ntqr svg{width:100%;height:100%;display:block}
+  .ntqr-cap{font-size:8px;text-align:center;color:var(--muted);margin-top:3px}
+  .nt-staff{background:#2B2420;color:#EDE6DD;padding:11px 14px;margin:12px -18px -18px}
+  .nt-staff .sh{font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#B89B82;display:flex;justify-content:space-between}
+  .nt-staff .meta{display:flex;gap:14px;margin-top:7px;font-size:10.5px;color:#C9BCAE}.nt-staff .meta b{color:#fff}
+  .hide-staff .nt-staff{display:none!important}
+  .ntstk{width:230px;position:relative;border-radius:16px;color:#fff;box-shadow:0 6px 22px rgba(0,0,0,.18)}
+  .ntstk-sale{background:radial-gradient(circle at 30% 0%,#C8341D 0%,#9E2412 100%);padding:20px 18px 16px;text-align:center;border-radius:16px}
+  .ntstk .head{font-weight:900;font-size:15px;letter-spacing:.2em;text-transform:uppercase}
+  .ntstk .apply{font-size:11px;opacity:.92;margin-top:3px;font-weight:600}
+  .ntburst{position:absolute;top:-14px;right:-12px;width:80px;height:80px;border-radius:50%;background:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#241E1A;transform:rotate(8deg);box-shadow:0 3px 8px rgba(0,0,0,.25)}
+  .ntburst .pct{font-weight:900;font-size:23px;line-height:.9;letter-spacing:-.02em}
+  .ntburst .lab{font-weight:800;font-size:9px;letter-spacing:.1em}
+  .ntstk-sale .old{margin-top:16px;font-size:14px;text-decoration:line-through;opacity:.85;font-variant-numeric:tabular-nums}
+  .ntstk-sale .new{font-weight:900;font-size:33px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .ntstk-sale .save{display:inline-block;margin-top:12px;background:var(--gold);color:#241E1A;font-weight:900;font-size:13px;padding:6px 14px;border-radius:30px}
+  .ntstk-sale .scar{margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(0,0,0,.22);padding:7px;border-radius:9px}
+  .ntstk-gift{background:radial-gradient(circle at 30% 0%,#2E7D52 0%,#1B5E3A 100%);padding:20px 18px 18px;text-align:center;border-radius:16px}
+  .ntstk-gift .ic{font-size:36px;line-height:1}
+  .ntstk-gift .head{font-weight:900;font-size:17px;letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+  .ntstk-gift .free{font-weight:800;font-size:11px;letter-spacing:.2em;opacity:.92;margin-top:1px}
+  .ntstk-gift .gname{font-family:var(--disp);font-weight:700;font-size:18px;line-height:1.2;margin:13px 8px 0}
+  .ntstk-gift .gval{display:inline-block;margin-top:12px;background:var(--gold);color:#241E1A;font-weight:900;font-size:14px;padding:7px 16px;border-radius:30px}
+  .ntstk-gift .gval small{font-weight:700;font-size:10px;display:block;letter-spacing:.05em}
+  .ntstk-gift .cond{margin-top:13px;font-size:11px;font-weight:700;background:rgba(0,0,0,.2);padding:8px 10px;border-radius:9px;line-height:1.35}
+  .gfitem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);font-size:13px}
+  .gfitem button{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:16px}
+
   #printArea{display:none}
   @media print{body>*:not(#printArea){display:none!important}#printArea{display:block!important;padding:0}
     .pv{font-size:13px}.pv h1{font-size:20px;margin:0 0 4px}.pv table{width:100%}.pv th,.pv td{border-bottom:1px solid #999;padding:6px 8px}
-    .tags{display:grid;grid-template-columns:1fr 1fr;gap:10px}}
+    .tags{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    #printArea .lblsheet{display:flex;flex-wrap:wrap;gap:7mm;align-items:flex-start}
+    .nttag,.ntstk{box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .nttag *,.ntstk *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .nttag{width:86mm;border:1px solid #bbb}
+    .ntstk{width:60mm}}
   @media (max-width:860px){.grid2{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}
     .trust{grid-template-columns:1fr 1fr}.hero{padding:38px 28px;min-height:240px}.hero h1{font-size:31px}.hero::after{font-size:140px}
     .sechead h2{font-size:23px}#footer .in{grid-template-columns:1fr 1fr;gap:26px}}
@@ -1483,34 +1539,122 @@ function renderBaocao(){
 /* ====================== QUẢN TRỊ: ĐƠN KHÁCH (trong Bán hàng phụ) — gộp vào báo cáo qua orders nếu cần ====================== */
 
 /* ====================== QUẢN TRỊ: IN TAG / QR ====================== */
+let tagMode='base', giftStickers=[];
+function productURL(p){return location.origin+location.pathname+'?p='+encodeURIComponent(p.id);}
+// ---- mẫu nhãn ----
+function lblTag(p,opt){opt=opt||{};
+  const hasSale=p.salePrice&&p.salePrice<p.price;
+  const prem=!hasSale&&p.price>=10000000;
+  const led=[['Chất liệu',p.material],['Kích thước',p.size||p.sizeOpts],['Màu',p.color],['Danh mục',p.cat]].filter(r=>r[1]);
+  const ledger=led.length?`<div class="nt-ledger">${led.map(([k,v])=>`<div class="nt-lrow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`:'';
+  const qr=`<div><div class="ntqr">${qrSvg(productURL(p))}</div><div class="ntqr-cap">Quét xem SP</div></div>`;
+  const staff=opt.staff?`<div class="nt-staff"><div class="sh"><span>● Nội bộ – NV bán</span><span>${esc(p.sku||'')}</span></div><div class="meta"><span>Tồn: <b>${esc(String(p.stock!=null?p.stock:''))}</b></span>${p.cat?`<span>Nhóm: <b>${esc(p.cat)}</b></span>`:''}</div></div>`:'';
+  return `<div class="nttag ${prem?'prem':'reg'}">${prem?'<div class="corner">Cao cấp</div>':''}
+    <div class="nttag-in">
+      <div class="nt-eyebrow"><span class="bar"></span>${prem?'Cao cấp · Best seller':esc(settings.shop||'Sản phẩm')}</div>
+      <div class="nt-name">${esc(p.name||'(chưa đặt tên)')}</div>
+      <div class="nt-sku">MÃ: <b>${esc(p.sku||'—')}</b></div>
+      ${ledger}
+      <div class="nt-price"><div><div class="lab">Giá bán</div><div class="nt-now">${fmt(sellPrice(p))}</div>${hasSale?`<div class="nt-old">${fmt(p.price)}</div>`:''}</div>${qr}</div>
+      ${staff}
+    </div></div>`;
+}
+function lblSale(p,scar){
+  const old=p.price,now=p.salePrice,pct=Math.round((1-now/old)*100),save=old-now;
+  return `<div class="ntstk"><div class="ntstk-sale">
+    <div class="ntburst"><div class="pct">-${pct}%</div><div class="lab">GIẢM</div></div>
+    <div class="head">Giảm giá</div>
+    <div class="apply">${esc(p.name)}${p.sku?' · '+esc(p.sku):''}</div>
+    <div class="old">${fmt(old)}</div><div class="new">${fmt(now)}</div>
+    <div class="save">TIẾT KIỆM ${fmt(save)}</div>
+    ${scar?`<div class="scar">⏳ ${esc(scar)}</div>`:''}
+  </div></div>`;
+}
+function lblGift(g){const v=num(g.val);
+  return `<div class="ntstk"><div class="ntstk-gift">
+    <div class="ic">🎁</div><div class="head">Quà tặng</div><div class="free">Mua là có quà</div>
+    <div class="gname">${esc(g.gift||'(chưa nhập quà)')}</div>
+    ${v?`<div class="gval">Trị giá ${fmt(v)}<small>Tặng miễn phí</small></div>`:''}
+    ${g.cond?`<div class="cond">${esc(g.cond)}</div>`:''}
+  </div></div>`;
+}
+function lblPreview(){
+  const sheet=$('#lblPrev');if(!sheet)return;let html='';
+  if(tagMode==='base'){
+    const staff=$('#lblStaff')&&$('#lblStaff').checked;
+    const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);
+    html=ids.map(id=>lblTag(prod(id),{staff})).join('');
+  }else if(tagMode==='sale'){
+    const scar=$('#lblScar')?$('#lblScar').value.trim():'';
+    const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);
+    html=ids.map(id=>lblSale(prod(id),scar)).join('');
+  }else{
+    html=giftStickers.map(lblGift).join('');
+  }
+  sheet.innerHTML=html;
+  $('#lblEmpty').style.display=html?'none':'block';
+}
+function lblPrint(){
+  let html='';
+  if(tagMode==='base'){const staff=$('#lblStaff')&&$('#lblStaff').checked;const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);html=ids.map(id=>lblTag(prod(id),{staff})).join('');}
+  else if(tagMode==='sale'){const scar=$('#lblScar')?$('#lblScar').value.trim():'';const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);html=ids.map(id=>lblSale(prod(id),scar)).join('');}
+  else html=giftStickers.map(lblGift).join('');
+  if(!html){toast('Chưa chọn/nhập nhãn nào để in');return;}
+  $('#printArea').innerHTML=`<div class="lblsheet">${html}</div>`;window.print();
+}
 function renderTag(){
-  $('#view').innerHTML=`<h2>In thẻ giá & QR sản phẩm</h2>
-    <div class="card" style="margin-bottom:16px"><div class="sectitle"><h3 style="margin:0">Chọn sản phẩm để in (mỗi thẻ có mã QR tra cứu)</h3>
-      <button class="btn sm" id="tPrint">🖨 In các thẻ đã chọn</button></div>
-      <table><thead><tr><th style="width:34px"><input type="checkbox" id="tAll"></th><th>Tên</th><th>Mã</th><th class="num">Giá</th></tr></thead><tbody>
-      ${products.map(p=>`<tr><td><input type="checkbox" class="tChk" value="${p.id}"></td><td>${esc(p.name)}</td><td>${esc(p.sku||'—')}</td><td class="num">${fmt(sellPrice(p))}</td></tr>`).join('')}
-      </tbody></table></div>
-    <p class="hint">Thẻ in gồm: tên SP, mã, giá bán (và giá gạch nếu có KM), mã QR chứa mã SP để tra cứu nhanh.</p>`;
-  $('#tAll').onchange=e=>$('#view').querySelectorAll('.tChk').forEach(c=>c.checked=e.target.checked);
-  $('#tPrint').onclick=()=>{
-    const ids=[...$('#view').querySelectorAll('.tChk:checked')].map(c=>c.value);
-    if(!ids.length){toast('Chọn ít nhất 1 sản phẩm');return;}
-    printTags(ids);
+  const onSale=products.filter(p=>p.salePrice&&p.salePrice<p.price);
+  let pane='';
+  if(tagMode==='base'){
+    pane=`<div class="card"><label class="permrow" style="background:#fff;margin-bottom:12px"><input type="checkbox" id="lblStaff"><span class="pn">In kèm <b>khối nội bộ</b> cho nhân viên (tồn kho, nhóm hàng) — nền tối phía dưới thẻ</span></label>
+      <div class="sectitle"><p class="muted" style="margin:0">Chọn sản phẩm cần in thẻ</p><label style="font-size:13px"><input type="checkbox" id="lblAll"> Chọn tất cả</label></div>
+      <table><thead><tr><th style="width:34px"></th><th>Tên</th><th>Mã</th><th class="num">Giá</th></tr></thead><tbody>
+      ${products.map(p=>`<tr><td><input type="checkbox" class="lblChk" value="${p.id}"></td><td>${esc(p.name)}</td><td>${esc(p.sku||'—')}</td><td class="num">${fmt(sellPrice(p))}</td></tr>`).join('')}
+      </tbody></table></div>`;
+  }else if(tagMode==='sale'){
+    pane=`<div class="card">
+      <div class="setrow" style="max-width:420px"><label>Dòng tạo cấp bách (tùy chọn — in trên mọi tem)</label><input id="lblScar" placeholder="Chỉ đến cuối tháng · Số lượng có hạn"></div>
+      ${onSale.length?`<div class="sectitle" style="margin-top:8px"><p class="muted" style="margin:0">Sản phẩm đang giảm giá (tự tính % &amp; số tiền tiết kiệm)</p><label style="font-size:13px"><input type="checkbox" id="lblAll"> Chọn tất cả</label></div>
+      <table><thead><tr><th style="width:34px"></th><th>Tên</th><th class="num">Giá gốc</th><th class="num">Giá KM</th><th class="num">Giảm</th></tr></thead><tbody>
+      ${onSale.map(p=>`<tr><td><input type="checkbox" class="lblChk" value="${p.id}"></td><td>${esc(p.name)}</td><td class="num" style="text-decoration:line-through;color:var(--muted)">${fmt(p.price)}</td><td class="num">${fmt(p.salePrice)}</td><td class="num">-${Math.round((1-p.salePrice/p.price)*100)}%</td></tr>`).join('')}
+      </tbody></table>`:'<p class="hint" style="margin-top:10px">Chưa có sản phẩm nào đang giảm giá. Vào tab <b>Kho</b> đặt <b>Giá KM</b> nhỏ hơn giá bán để tạo tem SALE.</p>'}
+    </div>`;
+  }else{
+    pane=`<div class="card">
+      <p class="hint" style="margin:0 0 12px">Tem quà tặng nhập tay (dữ liệu sản phẩm chưa có trường quà). Thêm bao nhiêu tem tùy ý rồi in.</p>
+      <div class="row"><div class="setrow"><label>Tên quà tặng</label><input id="gfName" placeholder="2 gối tựa + thảm trang trí"></div>
+        <div class="setrow"><label>Trị giá quà (đ)</label><input id="gfVal" inputmode="numeric" placeholder="850000"></div></div>
+      <div class="setrow"><label>Điều kiện / áp dụng cho (tùy chọn)</label><input id="gfCond" placeholder="Khi mua Sofa Milano (SF-101)"></div>
+      <button class="btn sm" id="gfAdd" style="margin-top:4px">+ Thêm tem quà</button>
+      <div id="gfList" style="margin-top:12px">${giftStickers.length?giftStickers.map((g,i)=>`<div class="gfitem"><span><b>${esc(g.gift||'(chưa nhập)')}</b>${g.val?' · '+fmt(num(g.val)):''}${g.cond?' · '+esc(g.cond):''}</span><button data-gi="${i}" title="Xóa">×</button></div>`).join(''):'<p class="muted" style="margin:0;font-size:13px">Chưa có tem quà nào.</p>'}</div>
+    </div>`;
+  }
+  $('#view').innerHTML=`<h2>In tem &amp; nhãn sản phẩm</h2>
+    <div class="lblbar" id="lblBar">
+      <button data-m="base" aria-pressed="${tagMode==='base'}">Thẻ chính</button>
+      <button data-m="sale" aria-pressed="${tagMode==='sale'}">Sticker SALE</button>
+      <button data-m="gift" aria-pressed="${tagMode==='gift'}">Sticker Quà</button>
+    </div>
+    ${pane}
+    <div class="card" style="margin-top:16px"><div class="sectitle"><h3 style="margin:0">Xem trước &amp; in</h3>
+      <button class="btn sm" id="lblPrintBtn">🖨 In các nhãn đã chọn</button></div>
+      <p class="hint" style="margin:0 0 12px">Mã QR trên thẻ dẫn tới <b>trang sản phẩm</b> để khách quét xem chi tiết. Khi in: chọn khổ A4, bật <b>"Đồ họa nền / Background graphics"</b> để giữ màu.</p>
+      <div class="lblsheet" id="lblPrev"></div>
+      <p class="hint" id="lblEmpty">Chọn sản phẩm hoặc nhập thông tin để xem trước.</p>
+    </div>`;
+  $('#lblBar').onclick=e=>{const b=e.target.closest('[data-m]');if(!b)return;tagMode=b.dataset.m;renderTag();};
+  const all=$('#lblAll');if(all)all.onchange=e=>{$('#view').querySelectorAll('.lblChk').forEach(c=>c.checked=e.target.checked);lblPreview();};
+  $('#view').querySelectorAll('.lblChk').forEach(c=>c.onchange=lblPreview);
+  const sc=$('#lblScar');if(sc)sc.oninput=lblPreview;
+  const ga=$('#gfAdd');if(ga)ga.onclick=()=>{
+    const gift=$('#gfName').value.trim();if(!gift){toast('Nhập tên quà tặng');return;}
+    giftStickers.push({gift,val:$('#gfVal').value.trim(),cond:$('#gfCond').value.trim()});renderTag();
   };
+  const gl=$('#gfList');if(gl)gl.onclick=e=>{const b=e.target.closest('[data-gi]');if(!b)return;giftStickers.splice(+b.dataset.gi,1);renderTag();};
+  $('#lblPrintBtn').onclick=lblPrint;
+  lblPreview();
 }
 function qrSvg(text){try{const q=qrcode(0,'M');q.addData(text);q.make();return q.createSvgTag({cellSize:3,margin:0});}catch(e){return '';}}
-function printTags(ids){
-  const tags=ids.map(id=>{const p=prod(id);const hasSale=p.salePrice&&p.salePrice<p.price;
-    return `<div style="border:1px solid #333;border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;page-break-inside:avoid">
-      <div><div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#888">${esc(settings.shop)}</div>
-      <div style="font-family:'Montserrat',sans-serif;font-weight:700;font-size:17px;margin:3px 0">${esc(p.name)}</div>
-      <div style="font-size:11px;color:#666">Mã: ${esc(p.sku||'—')}${p.size?' · '+esc(p.size):''}</div>
-      <div style="margin-top:6px"><span style="font-size:20px;font-weight:800;color:#B5531A">${fmt(sellPrice(p))}</span>${hasSale?` <span style="text-decoration:line-through;color:#999;font-size:13px">${fmt(p.price)}</span>`:''}</div></div>
-      <div style="width:74px;height:74px;flex:none">${qrSvg('SP:'+(p.sku||p.id)+'|'+p.name)}</div>
-    </div>`;}).join('');
-  $('#printArea').innerHTML=`<div class="tags" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px">${tags}</div>`;
-  window.print();
-}
 
 /* ====================== QUẢN TRỊ: GIAO DIỆN TRANG BÁN HÀNG ====================== */
 const POSCELLS=[['top','left'],['top','center'],['top','right'],['center','left'],['center','center'],['center','right'],['bottom','left'],['bottom','center'],['bottom','right']];
