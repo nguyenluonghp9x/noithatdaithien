@@ -392,8 +392,8 @@
   .lblsheet{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
   .nttag{width:300px;background:#FCFBF8;border:1px solid var(--line);border-radius:14px;position:relative;box-shadow:var(--shadow);overflow:hidden}
   .nttag-in{padding:18px}
-  .nttag .corner{position:absolute;top:13px;right:-32px;transform:rotate(45deg);color:#fff;font-weight:800;font-size:10px;letter-spacing:.14em;padding:5px 40px;text-transform:uppercase;background:var(--warn)}
-  .nttag.reg .corner{display:none}
+  .nttag .corner{position:absolute;top:13px;right:-32px;transform:rotate(45deg);color:#fff;font-weight:800;font-size:10px;letter-spacing:.14em;padding:5px 40px;text-transform:uppercase;background:var(--warn);z-index:2}
+  .nttag .corner.hot{background:var(--sale)}
   .nt-eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .nt-eyebrow .bar{width:18px;height:2px;background:var(--orange)}
   .nttag.prem .nt-eyebrow .bar{background:var(--warn)}
@@ -1421,6 +1421,10 @@ function renderKho(){
         <div><label>Cảnh báo ≤</label><input id="kMin" inputmode="numeric" value="2"></div>
       </div>
       <div style="margin-top:10px"><label>Mô tả</label><textarea id="kDesc" rows="2" placeholder="Điểm nổi bật, bảo hành..."></textarea></div>
+      <div class="row" style="margin-top:10px">
+        <label class="permrow" style="background:#fff"><input type="checkbox" id="kPremium"><span class="pn">⭐ Hàng cao cấp <span class="muted" style="font-weight:400">(in nhãn "Cao cấp" trên thẻ)</span></span></label>
+        <label class="permrow" style="background:#fff"><input type="checkbox" id="kHot"><span class="pn">🔥 Bán chạy / Best seller</span></label>
+      </div>
       <div style="margin-top:10px"><label>Ảnh sản phẩm</label><div class="gallery" id="kGallery"></div>
         <label class="filebtn" style="margin-top:8px" for="fileGallery">+ Thêm ảnh</label></div>
       <div class="row" style="margin-top:14px"><button class="btn" id="kSave">Lưu sản phẩm</button><button class="btn alt" id="kClear" style="flex:0 0 120px">Làm mới</button></div>
@@ -1451,6 +1455,7 @@ async function saveKho(){
   const data={sku:$('#kSku').value.trim(),name,cat:$('#kCat').value==='__new'?'':$('#kCat').value,unit:$('#kUnit').value.trim(),
     color:$('#kColor').value.trim(),sizeOpts:$('#kSizeOpts').value.trim(),material:$('#kMaterial').value.trim(),size:$('#kSize').value.trim(),
     cost:num($('#kCost').value),price:num($('#kPrice').value),salePrice:num($('#kSale').value),
+    premium:$('#kPremium').checked,hot:$('#kHot').checked,
     stock:num($('#kStock').value),min:num($('#kMin').value),desc:$('#kDesc').value.trim(),images:[...(window._kImgs||[])]};
   if(id){Object.assign(prod(id),data);}else{products.push({id:uid(),...data});}
   await saveP();window._kImgs=[];clearK();toast('Đã lưu');renderKho();
@@ -1459,8 +1464,9 @@ function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];
   $('#kId').value=p.id;$('#kSku').value=p.sku||'';$('#kName').value=p.name;$('#kUnit').value=p.unit||'';
   $('#kCat').innerHTML=catSelect(p.cat||'');$('#kColor').value=p.color||'';$('#kSizeOpts').value=p.sizeOpts||'';$('#kMaterial').value=p.material||'';$('#kSize').value=p.size||'';
   if($('#kCost'))$('#kCost').value=p.cost||'';$('#kPrice').value=p.price||'';$('#kSale').value=p.salePrice||'';
-  $('#kStock').value=p.stock||0;$('#kMin').value=p.min||2;$('#kDesc').value=p.desc||'';renderKGallery();window.scrollTo({top:0,behavior:'smooth'});}
-function clearK(){['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';if($('#kCat'))$('#kCat').innerHTML=catSelect('');}
+  $('#kStock').value=p.stock||0;$('#kMin').value=p.min||2;$('#kDesc').value=p.desc||'';
+  $('#kPremium').checked=!!p.premium;$('#kHot').checked=!!p.hot;renderKGallery();window.scrollTo({top:0,behavior:'smooth'});}
+function clearK(){['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';if($('#kCat'))$('#kCat').innerHTML=catSelect('');if($('#kPremium'))$('#kPremium').checked=false;if($('#kHot'))$('#kHot').checked=false;}
 
 /* ====================== QUẢN TRỊ: NHẬP / XUẤT ====================== */
 function renderPhieu(type){
@@ -1544,14 +1550,16 @@ function productURL(p){return location.origin+location.pathname+'?p='+encodeURIC
 // ---- mẫu nhãn ----
 function lblTag(p,opt){opt=opt||{};
   const hasSale=p.salePrice&&p.salePrice<p.price;
-  const prem=!hasSale&&p.price>=10000000;
+  const prem=!!p.premium, hot=!!p.hot;
+  const eyebrow=[prem?'Cao cấp':'',hot?'Best seller':''].filter(Boolean).join(' · ')||esc(settings.shop||'Sản phẩm');
   const led=[['Chất liệu',p.material],['Kích thước',p.size||p.sizeOpts],['Màu',p.color],['Danh mục',p.cat]].filter(r=>r[1]);
   const ledger=led.length?`<div class="nt-ledger">${led.map(([k,v])=>`<div class="nt-lrow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`:'';
   const qr=`<div><div class="ntqr">${qrSvg(productURL(p))}</div><div class="ntqr-cap">Quét xem SP</div></div>`;
   const staff=opt.staff?`<div class="nt-staff"><div class="sh"><span>● Nội bộ – NV bán</span><span>${esc(p.sku||'')}</span></div><div class="meta"><span>Tồn: <b>${esc(String(p.stock!=null?p.stock:''))}</b></span>${p.cat?`<span>Nhóm: <b>${esc(p.cat)}</b></span>`:''}</div></div>`:'';
-  return `<div class="nttag ${prem?'prem':'reg'}">${prem?'<div class="corner">Cao cấp</div>':''}
+  const corner=prem?'<div class="corner">Cao cấp</div>':(hot?'<div class="corner hot">Bán chạy</div>':'');
+  return `<div class="nttag ${prem?'prem':'reg'}${hot?' hot':''}">${corner}
     <div class="nttag-in">
-      <div class="nt-eyebrow"><span class="bar"></span>${prem?'Cao cấp · Best seller':esc(settings.shop||'Sản phẩm')}</div>
+      <div class="nt-eyebrow"><span class="bar"></span>${eyebrow}</div>
       <div class="nt-name">${esc(p.name||'(chưa đặt tên)')}</div>
       <div class="nt-sku">MÃ: <b>${esc(p.sku||'—')}</b></div>
       ${ledger}
