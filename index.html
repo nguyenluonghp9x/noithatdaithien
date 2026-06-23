@@ -402,6 +402,7 @@
   .nt-ledger{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .nt-lrow{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12px;border-bottom:1px dotted var(--line)}
   .nt-lrow:last-child{border-bottom:0}.nt-lrow .k{color:var(--muted)}.nt-lrow .v{text-align:right;font-weight:600}
+  .nt-custom{margin-top:12px;display:flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:var(--orange-d);background:var(--orange-l);border:1px dashed var(--orange);border-radius:8px;padding:7px 10px;line-height:1.3}
   .nt-price{margin-top:13px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
   .nt-price .lab{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   .nt-now{font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
@@ -1425,6 +1426,7 @@ function renderKho(){
         <label class="permrow" style="background:#fff"><input type="checkbox" id="kPremium"><span class="pn">⭐ Hàng cao cấp <span class="muted" style="font-weight:400">(in nhãn "Cao cấp" trên thẻ)</span></span></label>
         <label class="permrow" style="background:#fff"><input type="checkbox" id="kHot"><span class="pn">🔥 Bán chạy / Best seller</span></label>
       </div>
+      <div style="margin-top:10px"><label class="permrow" style="background:#fff"><input type="checkbox" id="kCustom"><span class="pn">📐 Nhận đặt theo kích thước yêu cầu <span class="muted" style="font-weight:400">(in nhãn này trên thẻ)</span></span></label></div>
       <div style="margin-top:10px"><label>Ảnh sản phẩm</label><div class="gallery" id="kGallery"></div>
         <label class="filebtn" style="margin-top:8px" for="fileGallery">+ Thêm ảnh</label></div>
       <div class="row" style="margin-top:14px"><button class="btn" id="kSave">Lưu sản phẩm</button><button class="btn alt" id="kClear" style="flex:0 0 120px">Làm mới</button></div>
@@ -1455,7 +1457,7 @@ async function saveKho(){
   const data={sku:$('#kSku').value.trim(),name,cat:$('#kCat').value==='__new'?'':$('#kCat').value,unit:$('#kUnit').value.trim(),
     color:$('#kColor').value.trim(),sizeOpts:$('#kSizeOpts').value.trim(),material:$('#kMaterial').value.trim(),size:$('#kSize').value.trim(),
     cost:num($('#kCost').value),price:num($('#kPrice').value),salePrice:num($('#kSale').value),
-    premium:$('#kPremium').checked,hot:$('#kHot').checked,
+    premium:$('#kPremium').checked,hot:$('#kHot').checked,custom:$('#kCustom').checked,
     stock:num($('#kStock').value),min:num($('#kMin').value),desc:$('#kDesc').value.trim(),images:[...(window._kImgs||[])]};
   if(id){Object.assign(prod(id),data);}else{products.push({id:uid(),...data});}
   await saveP();window._kImgs=[];clearK();toast('Đã lưu');renderKho();
@@ -1465,8 +1467,8 @@ function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];
   $('#kCat').innerHTML=catSelect(p.cat||'');$('#kColor').value=p.color||'';$('#kSizeOpts').value=p.sizeOpts||'';$('#kMaterial').value=p.material||'';$('#kSize').value=p.size||'';
   if($('#kCost'))$('#kCost').value=p.cost||'';$('#kPrice').value=p.price||'';$('#kSale').value=p.salePrice||'';
   $('#kStock').value=p.stock||0;$('#kMin').value=p.min||2;$('#kDesc').value=p.desc||'';
-  $('#kPremium').checked=!!p.premium;$('#kHot').checked=!!p.hot;renderKGallery();window.scrollTo({top:0,behavior:'smooth'});}
-function clearK(){['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';if($('#kCat'))$('#kCat').innerHTML=catSelect('');if($('#kPremium'))$('#kPremium').checked=false;if($('#kHot'))$('#kHot').checked=false;}
+  $('#kPremium').checked=!!p.premium;$('#kHot').checked=!!p.hot;$('#kCustom').checked=!!p.custom;renderKGallery();window.scrollTo({top:0,behavior:'smooth'});}
+function clearK(){['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';if($('#kCat'))$('#kCat').innerHTML=catSelect('');if($('#kPremium'))$('#kPremium').checked=false;if($('#kHot'))$('#kHot').checked=false;if($('#kCustom'))$('#kCustom').checked=false;}
 
 /* ====================== QUẢN TRỊ: NHẬP / XUẤT ====================== */
 function renderPhieu(type){
@@ -1563,6 +1565,7 @@ function lblTag(p,opt){opt=opt||{};
       <div class="nt-name">${esc(p.name||'(chưa đặt tên)')}</div>
       <div class="nt-sku">MÃ: <b>${esc(p.sku||'—')}</b></div>
       ${ledger}
+      ${p.custom?'<div class="nt-custom">📐 Nhận đặt theo kích thước yêu cầu</div>':''}
       <div class="nt-price"><div><div class="lab">Giá bán</div><div class="nt-now">${fmt(sellPrice(p))}</div>${hasSale?`<div class="nt-old">${fmt(p.price)}</div>`:''}</div>${qr}</div>
       ${staff}
     </div></div>`;
