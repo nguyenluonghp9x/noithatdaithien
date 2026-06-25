@@ -545,6 +545,7 @@
 <input type="file" id="fileBanner" accept="image/*" hidden>
 <input type="file" id="fileLogo" accept="image/*" hidden>
 <input type="file" id="fileIn" accept="application/json" hidden>
+<input type="file" id="fileProducts" accept="application/json" hidden>
 <div id="printArea"></div>
 <div class="toast" id="toast"></div>
 
@@ -1457,7 +1458,8 @@ function renderKho(){
     </div>
     <div class="card">
       <div class="sectitle"><h3 style="margin:0">Danh sách (${products.length}) · Giá trị tồn: ${fmt(stockVal)}</h3>
-        <input id="kSearch" placeholder="Tìm trong kho..." style="max-width:240px" value="${esc(khoSearch)}"></div>
+        <div style="display:flex;gap:8px;align-items:center"><button class="btn sm alt" id="kImport" title="Nhập nhiều sản phẩm từ file .json (gộp theo mã SP)">⬆ Nhập sản phẩm</button>
+        <input id="kSearch" placeholder="Tìm trong kho..." style="max-width:200px" value="${esc(khoSearch)}"></div></div>
       <table><thead><tr><th>Mã</th><th>Tên</th><th>Danh mục</th><th class="num">Tồn</th>${showCost?'<th class="num">Giá vốn</th>':''}<th class="num">Giá bán</th><th></th></tr></thead><tbody>
       ${list.map(p=>`<tr class="${p.stock<=p.min?'low':''}"><td>${esc(p.sku||'—')}</td><td>${esc(p.name)}</td><td>${esc(p.cat||'—')}</td>
         <td class="num">${p.stock} ${esc(p.unit||'')}</td>${showCost?`<td class="num">${fmt(p.cost)}</td>`:''}
@@ -1468,6 +1470,7 @@ function renderKho(){
   window._kImgs=window._kImgs||[];renderKGallery();
   $('#kCat').onchange=async e=>{if(e.target.value==='__new'){const n=await uiPrompt({title:'Danh mục mới',label:'Tên danh mục',placeholder:'VD: Sofa, Bàn ăn, Tủ kệ...'});if(n&&n.trim()){const t=n.trim();if(!cats.includes(t)){cats.push(t);await saveCats();}e.target.innerHTML=catSelect(t);}else e.target.value='';}};
   $('#kSearch').oninput=e=>{khoSearch=e.target.value;renderKho();};
+  const kim=$('#kImport');if(kim)kim.onclick=()=>$('#fileProducts').click();
   $('#kSave').onclick=saveKho;
   $('#kClear').onclick=()=>{window._kImgs=[];clearK();renderKho();};
   $('#view').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editKho(b.dataset.edit));
@@ -1986,6 +1989,28 @@ $('#fileIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new Fil
       await saveP();await saveCats();await saveV();await saveO();await saveStaff();await saveSet();
       toast('Đã khôi phục dữ liệu');renderBrand();renderView();}else toast('File không hợp lệ');
   }catch(_){toast('Không đọc được file');}};r.readAsText(f);e.target.value='';};
+// Nhập danh sách sản phẩm (.json) — GỘP theo mã SP, không xóa dữ liệu khác
+$('#fileProducts').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=async()=>{try{
+    let arr=JSON.parse(r.result);if(arr&&arr.products)arr=arr.products;
+    if(!Array.isArray(arr)){toast('File phải là danh sách sản phẩm');return;}
+    let added=0,updated=0,newCats=0;
+    arr.forEach(it=>{
+      if(!it||!it.name)return;
+      const data={sku:(it.sku||'').trim(),name:String(it.name).trim(),cat:(it.cat||'').trim(),unit:(it.unit||'Cái').trim(),
+        color:(it.color||'').trim(),sizeOpts:(it.sizeOpts||'').trim(),material:(it.material||'').trim(),size:(it.size||'').trim(),
+        cost:num(it.cost),price:num(it.price),salePrice:num(it.salePrice),minPrice:num(it.minPrice),
+        stock:(it.stock!=null?num(it.stock):99),min:(it.min!=null?num(it.min):0),desc:(it.desc||'').trim(),
+        premium:!!it.premium,hot:!!it.hot,custom:!!it.custom,images:Array.isArray(it.images)?it.images:[]};
+      if(data.cat&&!cats.includes(data.cat)){cats.push(data.cat);newCats++;}
+      const ex=data.sku?products.find(p=>(p.sku||'').toLowerCase()===data.sku.toLowerCase()):null;
+      if(ex){Object.assign(ex,data,{images:(data.images.length?data.images:ex.images)});updated++;}
+      else{products.push({id:uid(),...data});added++;}
+    });
+    await saveP();if(newCats)await saveCats();
+    toast('Đã nhập: +'+added+' mới, '+updated+' cập nhật'+(newCats?', '+newCats+' danh mục':''));
+    renderKho();
+  }catch(err){toast('Không đọc được file: '+err.message);}};r.readAsText(f);e.target.value='';};
 
 /* ====================== UPLOAD ẢNH ====================== */
 function resizeImg(file,max,cb){const img=new Image();const url=URL.createObjectURL(file);
