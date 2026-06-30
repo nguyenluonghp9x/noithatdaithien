@@ -423,7 +423,8 @@
   .nt-eyebrow .bar{width:18px;height:2px;background:var(--orange)}
   .nttag.prem .nt-eyebrow .bar{background:var(--warn)}
   .nt-name{font-family:var(--disp);font-weight:700;font-size:18px;line-height:1.15;margin:4px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nt-sku{font-size:10px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}.nt-sku b{color:var(--ink)}
+  .nt-sku{font-size:10px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;gap:8px}.nt-sku b{color:var(--ink)}
+  .nt-flag{font-size:8px;font-weight:800;letter-spacing:.02em;color:var(--sale);background:#F7DED9;border-radius:20px;padding:2px 8px;white-space:nowrap;text-transform:uppercase;flex:none}
   .nt-ledger{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
   .nt-lrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 0;font-size:10.5px;line-height:1.25;border-bottom:1px dotted var(--line)}
   .nt-lrow:last-child{border-bottom:0}
@@ -1660,14 +1661,14 @@ function lblTag(p,opt){opt=opt||{};
   const ledger=`<div class="nt-ledger">${led.map(([k,v])=>`<div class="nt-lrow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`;
   const qr=`<div><div class="ntqr">${qrSvg(productURL(p))}</div><div class="ntqr-cap">Quét xem SP</div></div>`;
   const staff=opt.staff?`<div class="nt-staff">● Nội bộ · Tồn <b>${esc(String(p.stock!=null?p.stock:'—'))}</b>${prodCat(p)?' · '+esc(prodCat(p)):''} · ${esc(p.sku||'')}</div>`:'';
-  const corner=prem?'<div class="corner">Cao cấp</div>':(hot?'<div class="corner hot">Bán chạy</div>':'');
+  const corner=hot?'<div class="corner hot">Bán chạy</div>':(prem?'<div class="corner">Cao cấp</div>':'');
   const szc=' sz-'+(opt.size||'sm');
   return `<div class="nttag ${prem?'prem':'reg'}${hot?' hot':''}${szc}${opt.staff?' has-staff':''}">${corner}
     <div class="nttag-in">
       <div class="nt-body">
         <div class="nt-eyebrow"><span class="bar"></span>${eyebrow}</div>
         <div class="nt-name">${esc(p.name||'(chưa đặt tên)')}</div>
-        <div class="nt-sku">MÃ: <b>${esc(p.sku||'—')}</b></div>
+        <div class="nt-sku"><span>MÃ: <b>${esc(p.sku||'—')}</b></span></div>
         ${ledger}
         ${p.custom?'<div class="nt-custom">📐 Nhận đặt theo kích thước yêu cầu</div>':''}
       </div>
