@@ -448,13 +448,18 @@
      Nhỏ 93×68mm = 8 thẻ/A4 (2 cột × 4 hàng). To 186×68mm = gấp đôi (1 to = chỗ của 2 nhỏ). */
   .nttag.sz-sm{width:93mm;height:68mm}
   .nttag.sz-lg{width:186mm;height:68mm}
-  .nttag.sz-lg .nttag-in{flex-direction:row;align-items:stretch;gap:8mm}
-  .nttag.sz-lg .nt-body{flex:1;min-width:0;display:flex;flex-direction:column}
-  .nttag.sz-lg .nt-price{flex:0 0 auto;margin-top:0;margin-bottom:0;flex-direction:column;align-items:flex-end;justify-content:center;padding-top:0;text-align:right;border-top:0;border-left:1px solid var(--line);padding-left:8mm}
-  .nttag.sz-lg .nt-name{font-size:21px}
-  .nttag.sz-lg .nt-now{font-size:27px}
-  .nttag.sz-lg .ntqr{width:84px;height:84px}
-  .nttag.sz-lg.has-staff .nt-body{padding-bottom:2px}
+  .nttag.sz-lg .nttag-in{flex-direction:row;align-items:center;gap:7mm}
+  .nttag.sz-lg .nt-body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .nttag.sz-lg .nt-price{flex:0 0 auto;margin:0;padding:0 0 0 7mm;border-top:0;border-left:1px solid var(--line);
+    display:flex;flex-direction:row;align-items:center;gap:6mm}
+  .nttag.sz-lg .nt-pl{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+  .nttag.sz-lg .nt-nowline{justify-content:flex-end}
+  .nttag.sz-lg .nt-name{font-size:22px;margin:3px 0 1px}
+  .nttag.sz-lg .nt-sku{margin-bottom:8px}
+  .nttag.sz-lg .nt-now{font-size:28px}
+  .nttag.sz-lg .nt-custom{align-self:flex-start;margin-top:9px}
+  .nttag.sz-lg .ntqr{width:82px;height:82px}
+  .nttag.sz-lg .ntqr-cap{font-size:8px;margin-top:3px}
   .ntstk{width:230px;position:relative;border-radius:16px;color:#fff;box-shadow:0 6px 22px rgba(0,0,0,.18)}
   .ntstk-sale{background:radial-gradient(circle at 30% 0%,#C8341D 0%,#9E2412 100%);padding:20px 18px 16px;text-align:center;border-radius:16px}
   .ntstk .head{font-weight:900;font-size:15px;letter-spacing:.2em;text-transform:uppercase}
@@ -1702,8 +1707,10 @@ function lblPreview(){
   const sheet=$('#lblPrev');if(!sheet)return;let html='';
   if(tagMode==='base'){
     const staff=$('#lblStaff')&&$('#lblStaff').checked;
-    const rows=[...$('#view').querySelectorAll('.lblSz')].filter(s=>s.value);
+    const rows=[...$('#view').querySelectorAll('.lblSz')].filter(s=>s.value).sort((a,b)=>(a.value==='lg'?1:0)-(b.value==='lg'?1:0));
     html=rows.map(s=>lblTag(prod(s.dataset.id),{staff,size:s.value})).join('');
+    const nSm=rows.filter(s=>s.value==='sm').length,nLg=rows.filter(s=>s.value==='lg').length;
+    const pk=$('#lblPicked');if(pk)pk.textContent=rows.length?('Đang chọn in: '+nSm+' nhỏ + '+nLg+' to — sẽ in nhỏ trước, to sau.'):'';
   }else if(tagMode==='sale'){
     const scar=$('#lblScar')?$('#lblScar').value.trim():'';
     const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);
@@ -1718,7 +1725,7 @@ function lblPreview(){
 }
 function lblPrint(){
   let html='';
-  if(tagMode==='base'){const staff=$('#lblStaff')&&$('#lblStaff').checked;const rows=[...$('#view').querySelectorAll('.lblSz')].filter(s=>s.value);html=rows.map(s=>lblTag(prod(s.dataset.id),{staff,size:s.value})).join('');}
+  if(tagMode==='base'){const staff=$('#lblStaff')&&$('#lblStaff').checked;const rows=[...$('#view').querySelectorAll('.lblSz')].filter(s=>s.value).sort((a,b)=>(a.value==='lg'?1:0)-(b.value==='lg'?1:0));html=rows.map(s=>lblTag(prod(s.dataset.id),{staff,size:s.value})).join('');}
   else if(tagMode==='sale'){const scar=$('#lblScar')?$('#lblScar').value.trim():'';const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);html=ids.map(id=>lblSale(prod(id),scar)).join('');}
   else html=giftStickers.map(lblGift).join('');
   if(!html){toast('Chưa chọn/nhập nhãn nào để in');return;}
@@ -1737,8 +1744,10 @@ function renderTag(){
       <label class="permrow" style="background:#fff;margin-bottom:12px"><input type="checkbox" id="lblStaff"><span class="pn">In kèm <b>khối nội bộ</b> cho nhân viên (tồn kho, nhóm hàng) — nền tối phía dưới thẻ</span></label>
       <div class="sectitle" style="flex-wrap:wrap"><p class="muted" style="margin:0">Chọn <b>khổ in</b> cho từng sản phẩm — in chung 1 trang A4 được cả 2 khổ, xếp khít không lỗi.<br>Nhỏ = <b>93×68mm</b> (8 thẻ/trang A4) · To = <b>186×68mm</b> (gấp đôi nhỏ, 4 thẻ/trang)</p>
         <div style="display:flex;gap:6px"><button class="btn sm alt" data-setall="sm">Tất cả Nhỏ</button><button class="btn sm alt" data-setall="lg">Tất cả To</button><button class="btn sm alt" data-setall="">Bỏ chọn</button></div></div>
-      <table><thead><tr><th>Tên</th><th>Mã</th><th class="num">Giá</th><th style="width:140px">Khổ in</th></tr></thead><tbody>
-      ${products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.sku||'—')}</td><td class="num">${fmt(sellPrice(p))}</td>
+      <div class="searchbar" style="max-width:340px;margin:0 0 12px;padding:9px 13px"><span style="color:var(--muted);display:flex">${svgIcon('search',16)}</span><input id="lblSearch" placeholder="Tìm sản phẩm cần in (tên / mã)..."></div>
+      <p class="muted" id="lblPicked" style="margin:0 0 8px;font-size:12.5px"></p>
+      <table><thead><tr><th>Tên</th><th>Mã</th><th class="num">Giá</th><th style="width:140px">Khổ in</th></tr></thead><tbody id="lblRows">
+      ${products.map(p=>`<tr data-find="${esc((p.name+' '+(p.sku||'')).toLowerCase())}"><td>${esc(p.name)}</td><td>${esc(p.sku||'—')}</td><td class="num">${fmt(sellPrice(p))}</td>
         <td><select class="lblSz" data-id="${p.id}"><option value="">— không in</option><option value="sm">Nhỏ (93×68)</option><option value="lg">To (186×68)</option></select></td></tr>`).join('')}
       </tbody></table></div>`;
   }else if(tagMode==='sale'){
@@ -1776,6 +1785,7 @@ function renderTag(){
   // base: chọn khổ từng SP + đặt nhanh tất cả
   $('#view').querySelectorAll('.lblSz').forEach(s=>s.onchange=lblPreview);
   $('#view').querySelectorAll('[data-setall]').forEach(b=>b.onclick=()=>{$('#view').querySelectorAll('.lblSz').forEach(s=>s.value=b.dataset.setall);lblPreview();});
+  const lsearch=$('#lblSearch');if(lsearch)lsearch.oninput=()=>{const q=lsearch.value.trim().toLowerCase();$('#lblRows').querySelectorAll('tr').forEach(tr=>{tr.style.display=(!q||tr.dataset.find.includes(q))?'':'none';});};
   const stf=$('#lblStaff');if(stf)stf.onchange=lblPreview;
   // sale: chọn SP
   const all=$('#lblAll');if(all)all.onchange=e=>{$('#view').querySelectorAll('.lblChk').forEach(c=>c.checked=e.target.checked);lblPreview();};
