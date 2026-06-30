@@ -415,27 +415,31 @@
   .lblbar button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
   .lblsheet{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
   .nttag{width:300px;background:#FCFBF8;border:1px solid var(--line);border-radius:14px;position:relative;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;box-sizing:border-box}
-  .nttag-in{padding:5mm 6mm;flex:1;min-height:0;display:flex;flex-direction:column}
-  .nt-body{min-height:0}
+  .nttag-in{padding:4mm 5mm;flex:1;min-height:0;display:flex;flex-direction:column}
+  .nt-body{flex:1 1 auto;min-height:0;overflow:hidden;display:flex;flex-direction:column}
   .nttag .corner{position:absolute;top:13px;right:-32px;transform:rotate(45deg);color:#fff;font-weight:800;font-size:10px;letter-spacing:.14em;padding:5px 40px;text-transform:uppercase;background:var(--warn);z-index:2}
   .nttag .corner.hot{background:var(--sale)}
   .nt-eyebrow{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .nt-eyebrow .bar{width:18px;height:2px;background:var(--orange)}
   .nttag.prem .nt-eyebrow .bar{background:var(--warn)}
-  .nt-name{font-family:var(--disp);font-weight:700;font-size:19px;line-height:1.2;margin:7px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .nt-sku{font-size:11px;color:var(--muted);letter-spacing:.05em;margin-bottom:7px}.nt-sku b{color:var(--ink)}
+  .nt-name{font-family:var(--disp);font-weight:700;font-size:18px;line-height:1.15;margin:4px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nt-sku{font-size:10px;color:var(--muted);letter-spacing:.04em;margin-bottom:5px}.nt-sku b{color:var(--ink)}
   .nt-ledger{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .nt-lrow{display:flex;justify-content:space-between;gap:10px;padding:3.5px 0;font-size:11.5px;border-bottom:1px dotted var(--line)}
-  .nt-lrow:last-child{border-bottom:0}.nt-lrow .k{color:var(--muted)}.nt-lrow .v{text-align:right;font-weight:600}
-  .nt-custom{margin-top:7px;display:flex;align-items:center;gap:6px;font-size:10px;font-weight:700;color:var(--orange-d);background:var(--orange-l);border:1px dashed var(--orange);border-radius:7px;padding:5px 8px;line-height:1.25}
-  .nt-price{margin-top:auto;padding-top:10px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-  .nt-price .lab{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .nt-now{font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1;color:var(--orange);font-variant-numeric:tabular-nums}
+  .nt-lrow{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:2px 0;font-size:10.5px;line-height:1.25;border-bottom:1px dotted var(--line)}
+  .nt-lrow:last-child{border-bottom:0}
+  .nt-lrow .k{color:var(--muted);flex:none}
+  .nt-lrow .v{flex:1;min-width:0;text-align:right;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nt-custom{margin-top:6px;font-size:9.5px;font-weight:700;color:var(--orange-d);background:var(--orange-l);border:1px dashed var(--orange);border-radius:6px;padding:3px 8px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
+  .nt-price{flex:none;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+  .nt-pl{min-width:0}
+  .nt-price .lab{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .nt-nowline{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+  .nt-now{font-weight:800;font-size:21px;letter-spacing:-.01em;line-height:1.05;color:var(--orange);font-variant-numeric:tabular-nums}
   .nttag.prem .nt-now{color:var(--warn)}
-  .nt-old{font-size:13px;text-decoration:line-through;color:#9a948a;margin-top:2px}
-  .ntqr{width:62px;height:62px;flex:none;border:1px solid var(--line);border-radius:8px;padding:4px;background:#fff}
+  .nt-old{font-size:12px;text-decoration:line-through;color:#9a948a}
+  .ntqr{width:50px;height:50px;flex:none;border:1px solid var(--line);border-radius:7px;padding:3px;background:#fff}
   .ntqr svg{width:100%;height:100%;display:block}
-  .ntqr-cap{font-size:8px;text-align:center;color:var(--muted);margin-top:3px}
+  .ntqr-cap{font-size:7.5px;text-align:center;color:var(--muted);margin-top:2px}
   .nt-staff{background:#2B2420;color:#EDE6DD;font-size:8.5px;font-weight:600;letter-spacing:.02em;padding:3px 6mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}
   .nt-staff b{color:#fff}
   .hide-staff .nt-staff{display:none!important}
@@ -445,7 +449,7 @@
   .nttag.sz-lg{width:186mm;height:68mm}
   .nttag.sz-lg .nttag-in{flex-direction:row;align-items:stretch;gap:8mm}
   .nttag.sz-lg .nt-body{flex:1;min-width:0;display:flex;flex-direction:column}
-  .nttag.sz-lg .nt-price{flex:0 0 auto;margin-top:auto;margin-bottom:0;flex-direction:column;align-items:flex-end;justify-content:center;padding-top:0;text-align:right;border-left:1px solid var(--line);padding-left:8mm}
+  .nttag.sz-lg .nt-price{flex:0 0 auto;margin-top:0;margin-bottom:0;flex-direction:column;align-items:flex-end;justify-content:center;padding-top:0;text-align:right;border-top:0;border-left:1px solid var(--line);padding-left:8mm}
   .nttag.sz-lg .nt-name{font-size:21px}
   .nttag.sz-lg .nt-now{font-size:27px}
   .nttag.sz-lg .ntqr{width:84px;height:84px}
@@ -1650,7 +1654,7 @@ function productURL(p){return location.origin+location.pathname+'?p='+encodeURIC
 function lblTag(p,opt){opt=opt||{};
   const hasSale=p.salePrice&&p.salePrice<p.price;
   const prem=!!p.premium, hot=!!p.hot;
-  const eyebrow=[prem?'Cao cấp':'',hot?'Best seller':''].filter(Boolean).join(' · ')||esc(settings.shop||'Sản phẩm');
+  const eyebrow=esc(settings.shop||'Sản phẩm');
   // Luôn hiện đủ 3 mục (kể cả trống) cho đồng nhất — không hiện Danh mục
   const led=[['Chất liệu',p.material||''],['Kích thước',p.size||p.sizeOpts||''],['Màu',p.color||'']];
   const ledger=`<div class="nt-ledger">${led.map(([k,v])=>`<div class="nt-lrow"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`;
@@ -1667,7 +1671,7 @@ function lblTag(p,opt){opt=opt||{};
         ${ledger}
         ${p.custom?'<div class="nt-custom">📐 Nhận đặt theo kích thước yêu cầu</div>':''}
       </div>
-      <div class="nt-price"><div><div class="lab">Giá bán</div><div class="nt-now">${fmt(sellPrice(p))}</div>${hasSale?`<div class="nt-old">${fmt(p.price)}</div>`:''}</div>${qr}</div>
+      <div class="nt-price"><div class="nt-pl"><div class="lab">Giá bán</div><div class="nt-nowline"><span class="nt-now">${fmt(sellPrice(p))}</span>${hasSale?`<span class="nt-old">${fmt(p.price)}</span>`:''}</div></div>${qr}</div>
     </div>${staff}</div>`;
 }
 function lblSale(p,scar){
