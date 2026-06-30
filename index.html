@@ -449,12 +449,12 @@
   .nttag.sz-sm{width:93mm;height:68mm}
   /* Nhãn TO = dạng DỌC, cao gấp đôi nhỏ (93×136mm), cùng cột 93mm để xếp gọn; chữ to hơn nhỏ */
   .nttag.sz-lg{width:93mm;height:136mm}
-  .nttag.sz-lg .nttag-in{padding:5mm}
-  .nttag.sz-lg .nt-eyebrow{font-size:11px}
-  .nttag.sz-lg .nt-name{font-size:25px;line-height:1.12;margin:8px 0 2px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .nttag.sz-lg .nt-sku{font-size:12px;margin-bottom:9px}
-  .nttag.sz-lg .nt-lrow{font-size:13px;padding:4px 0}
-  .nttag.sz-lg .nt-custom{font-size:12px;padding:6px 11px;margin-top:9px}
+  .nttag.sz-lg .nttag-in{padding:5mm 5.5mm}
+  .nttag.sz-lg .nt-eyebrow{font-size:11px;margin-bottom:4px}
+  .nttag.sz-lg .nt-name{font-size:25px;line-height:1.15;margin:10px 0 4px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .nttag.sz-lg .nt-sku{font-size:12px;margin-bottom:14px}
+  .nttag.sz-lg .nt-lrow{font-size:13px;padding:8px 0}
+  .nttag.sz-lg .nt-custom{font-size:12px;padding:7px 12px;margin-top:13px}
   .nttag.sz-lg .nt-body{flex:0 0 auto}
   /* Đáy nhãn dọc: giá + QR thành 1 cụm CĂN GIỮA, lấp khoảng trống, xếp dọc (không đè nhau) */
   .nttag.sz-lg .nt-price{flex:1 1 auto;min-height:0;margin-top:10px;padding-top:12px;border-top:1px solid var(--line);
@@ -466,6 +466,12 @@
   .nttag.sz-lg .nt-old{font-size:16px}
   .nttag.sz-lg .ntqr{width:104px;height:104px;padding:5px}
   .nttag.sz-lg .ntqr-cap{font-size:9.5px;margin-top:3px}
+  /* khi bật khối nội bộ thì nén lại chút cho vừa khổ */
+  .nttag.sz-lg.has-staff .nt-name{margin:7px 0 3px}
+  .nttag.sz-lg.has-staff .nt-sku{margin-bottom:9px}
+  .nttag.sz-lg.has-staff .nt-lrow{padding:5px 0}
+  .nttag.sz-lg.has-staff .nt-custom{margin-top:9px}
+  .nttag.sz-lg.has-staff .ntqr{width:94px;height:94px}
   .nttag.sz-lg .nt-staff{font-size:11px;padding:5px 6mm}
   .ntstk{width:230px;position:relative;border-radius:16px;color:#fff;box-shadow:0 6px 22px rgba(0,0,0,.18)}
   .ntstk-sale{background:radial-gradient(circle at 30% 0%,#C8341D 0%,#9E2412 100%);padding:20px 18px 16px;text-align:center;border-radius:16px}
