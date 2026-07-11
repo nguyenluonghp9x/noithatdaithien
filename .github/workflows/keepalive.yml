@@ -1,0 +1,20 @@
+name: Keep Supabase Alive
+
+# Ping database Supabase hằng ngày để project không tự pause (gói free pause sau ~7 ngày không hoạt động)
+on:
+  schedule:
+    - cron: '17 3 * * *'   # ~10h17 sáng giờ VN mỗi ngày (03:17 UTC)
+  workflow_dispatch: {}     # cho phép bấm chạy tay trong tab Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST (đọc nhẹ 1 bản ghi)
+        run: |
+          code=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "https://xviquvravscpionqundn.supabase.co/rest/v1/kv?select=key&limit=1" \
+            -H "apikey: sb_publishable_tWLZKvpeoXrm1eApB1vDtA_KkwwMdeE" \
+            -H "Authorization: Bearer sb_publishable_tWLZKvpeoXrm1eApB1vDtA_KkwwMdeE")
+          echo "Supabase HTTP $code"
+          if [ "$code" != "200" ]; then echo "::warning::Supabase khong tra ve 200 (co the dang pause hoac loi)"; fi
