@@ -1740,7 +1740,6 @@ function lblPromo(c){
   return `<div class="ntstk ntpromo"><div class="ntpromo-in">
     <div class="pmhead">${esc(c.title||'GIÁ KHUYẾN MÃI')}</div>
     <div class="seg7row">${cells.join('')}${c.suffix?`<span class="seg7suf">${esc(c.suffix)}</span>`:''}</div>
-    <div class="pmnote">Dùng bút tô số khi áp dụng khuyến mãi</div>
   </div></div>`;}
 function promoRead(){return {
   title:($('#pmTitle')&&$('#pmTitle').value.trim())||'GIÁ KHUYẾN MÃI',
