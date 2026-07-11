@@ -503,17 +503,16 @@
   .ntstk-gift .gval{display:inline-block;margin-top:12px;background:var(--gold);color:#241E1A;font-weight:900;font-size:14px;padding:7px 16px;border-radius:30px}
   .ntstk-gift .gval small{font-weight:700;font-size:10px;display:block;letter-spacing:.05em}
   .ntstk-gift .cond{margin-top:13px;font-size:11px;font-weight:700;background:rgba(0,0,0,.2);padding:8px 10px;border-radius:9px;line-height:1.35}
-  /* ===== TEM TỰ TÔ (LED 7 đoạn) ===== */
-  .ntpromo{width:88mm;background:#fff;color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.14)}
-  .ntpromo-in{border:2px solid var(--sale);border-radius:12px;padding:5mm 5mm 4mm}
-  .ntpromo .pmhead{background:var(--sale);color:#fff;font-weight:900;font-size:15px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:6px 8px;margin:-5mm -5mm 5mm;border-radius:10px 10px 0 0}
-  .ntpromo .seg7row{display:flex;align-items:flex-end;justify-content:center;gap:2.5mm}
+  /* ===== TEM TỰ TÔ (LED 7 đoạn) — khổ CỐ ĐỊNH 93×66mm để 8 tem lấp đầy A4 (2×4) ===== */
+  .ntpromo{width:93mm;height:66mm;background:#fff;color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.14)}
+  .ntpromo-in{height:100%;box-sizing:border-box;border:2px solid var(--sale);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .ntpromo .pmhead{background:var(--sale);color:#fff;font-weight:900;font-size:15px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:6px 8px;flex:none}
+  .ntpromo .seg7row{flex:1;display:flex;align-items:center;justify-content:center;gap:2.5mm;padding:2mm 4mm;min-height:0}
   .ntpromo .seg7cell{display:block}
-  .seg7{width:12mm;height:22mm;display:block}
+  .seg7{width:var(--dw,12.5mm);height:calc(var(--dw,12.5mm)*2.08);display:block}
   .seg7 .sg{fill:#E4DDCE;stroke:#D3C9B4;stroke-width:.6}
-  .ntpromo .seg7dot{align-self:flex-end;font-weight:900;font-size:26px;line-height:1;color:#E4DDCE;margin:0 -1mm 1mm}
-  .ntpromo .seg7suf{align-self:flex-end;font-weight:900;font-size:24px;color:var(--sale);margin-bottom:2mm;margin-left:1mm}
-  .ntpromo .pmnote{text-align:center;font-size:9px;color:var(--muted);margin-top:4mm;font-style:italic}
+  .ntpromo .seg7dot{align-self:flex-end;font-weight:900;font-size:30px;line-height:1;color:#E4DDCE;margin:0 -1mm 3mm}
+  .ntpromo .seg7suf{align-self:flex-end;font-weight:900;font-size:28px;color:var(--sale);margin-bottom:3mm;margin-left:1mm}
   .gfitem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);font-size:13px}
   .gfitem button{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:16px}
 
@@ -531,7 +530,7 @@
     .nttag.sz-lg{width:93mm;height:136mm}
     .ntstk{width:60mm}
     .saleL{width:93mm;height:66mm}
-    .ntpromo{width:88mm}}
+    .ntpromo{width:93mm;height:66mm}}
   @media (max-width:860px){.grid2{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}
     .trust{grid-template-columns:1fr 1fr}.hero{padding:38px 28px;min-height:240px}.hero h1{font-size:31px}.hero::after{font-size:140px}
     .sechead h2{font-size:23px}#footer .in{grid-template-columns:1fr 1fr;gap:26px}}
@@ -1748,11 +1747,12 @@ function seg7(){return `<svg class="seg7" viewBox="0 0 54 100" aria-hidden="true
   +`</svg>`;}
 function lblPromo(c){
   const n=Math.max(1,Math.min(8,c.digits||5)); const cells=[];
+  const dw=n<=5?12.5:(n===6?10.6:8.6); // bề rộng 1 chữ số (mm) — nhỏ lại khi nhiều số cho vừa khổ
   for(let i=0;i<n;i++){cells.push('<span class="seg7cell">'+seg7()+'</span>');
     if(c.dot&&i<n-1&&(n-1-i)%3===0)cells.push('<span class="seg7dot">.</span>');}
   return `<div class="ntstk ntpromo"><div class="ntpromo-in">
     <div class="pmhead">${esc(c.title||'GIÁ KHUYẾN MÃI')}</div>
-    <div class="seg7row">${cells.join('')}${c.suffix?`<span class="seg7suf">${esc(c.suffix)}</span>`:''}</div>
+    <div class="seg7row" style="--dw:${dw}mm">${cells.join('')}${c.suffix?`<span class="seg7suf">${esc(c.suffix)}</span>`:''}</div>
   </div></div>`;}
 function promoRead(){return {
   title:($('#pmTitle')&&$('#pmTitle').value.trim())||'GIÁ KHUYẾN MÃI',
