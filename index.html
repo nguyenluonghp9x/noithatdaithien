@@ -1746,8 +1746,8 @@ function seg7(){return `<svg class="seg7" viewBox="0 0 54 100" aria-hidden="true
   +`<rect class="sg" x="12" y="88" width="30" height="9" rx="4"/>`  // d dưới
   +`</svg>`;}
 function lblPromo(c){
-  const n=Math.max(1,Math.min(8,c.digits||5)); const cells=[];
-  const dw=n<=5?12.5:(n===6?10.6:8.6); // bề rộng 1 chữ số (mm) — nhỏ lại khi nhiều số cho vừa khổ
+  const n=Math.max(1,Math.min(5,c.digits||5)); const cells=[];
+  const dw=n<=3?17:(n===4?15.5:13.5); // bề rộng 1 chữ số (mm) — ít số thì to hơn cho lấp đầy tem
   for(let i=0;i<n;i++){cells.push('<span class="seg7cell">'+seg7()+'</span>');
     if(c.dot&&i<n-1&&(n-1-i)%3===0)cells.push('<span class="seg7dot">.</span>');}
   return `<div class="ntstk ntpromo"><div class="ntpromo-in">
@@ -1826,7 +1826,7 @@ function renderTag(){
     pane=`<div class="card">
       <p class="hint" style="margin:0 0 12px">Tem khuyến mãi in sẵn <b>số dạng LED 7 đoạn (mờ)</b> — khi cần đổi giá, bạn <b>dùng bút tô</b> các đoạn thành con số. In một lần, dùng nhiều lần.</p>
       <div class="row"><div class="setrow"><label>Tiêu đề tem</label><input id="pmTitle" value="GIÁ KHUYẾN MÃI"></div>
-        <div class="setrow" style="flex:0 0 130px"><label>Số chữ số</label><select id="pmDigits"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div></div>
+        <div class="setrow" style="flex:0 0 130px"><label>Số chữ số</label><select id="pmDigits"><option>3</option><option>4</option><option selected>5</option></select></div></div>
       <div class="row"><div class="setrow" style="flex:0 0 150px"><label>Đuôi (sau số)</label><input id="pmSuffix" value="đ"></div>
         <div class="setrow" style="flex:0 0 190px"><label class="permrow" style="background:#fff;margin-top:22px"><input type="checkbox" id="pmDot" checked><span class="pn">Dấu chấm phần nghìn</span></label></div>
         <div class="setrow" style="flex:0 0 130px"><label>Số lượng in</label><input id="pmQty" inputmode="numeric" value="8"></div></div>
