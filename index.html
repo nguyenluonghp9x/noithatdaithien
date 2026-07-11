@@ -483,18 +483,18 @@
   .ntstk-sale .new{font-weight:900;font-size:33px;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
   .ntstk-sale .save{display:inline-block;margin-top:12px;background:var(--gold);color:#241E1A;font-weight:900;font-size:13px;padding:6px 14px;border-radius:30px}
   .ntstk-sale .scar{margin-top:12px;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;background:rgba(0,0,0,.22);padding:7px;border-radius:9px}
-  /* Sticker SALE PHÓNG TO cho nổi bật */
-  .saleL{width:340px}
-  .saleL .ntstk-sale{padding:28px 24px 24px}
-  .saleL .head{font-size:21px;letter-spacing:.22em}
-  .saleL .apply{font-size:13.5px;margin-top:5px}
-  .saleL .old{font-size:19px;margin-top:22px}
-  .saleL .new{font-size:48px}
-  .saleL .save{font-size:17px;padding:9px 20px;margin-top:16px}
-  .saleL .scar{font-size:13.5px;margin-top:16px;padding:9px}
-  .saleL .ntburst{width:108px;height:108px;top:-20px;right:-18px}
-  .saleL .ntburst .pct{font-size:31px}
-  .saleL .ntburst .lab{font-size:11px}
+  /* Sticker SALE — khổ CỐ ĐỊNH 93×66mm để xếp KHÍT 8 tem/trang A4 (2 cột × 4 hàng), vẫn to nổi bật */
+  .saleL{width:93mm;height:66mm;overflow:hidden;border-radius:14px}
+  .saleL .ntstk-sale{height:100%;box-sizing:border-box;padding:5mm 6mm;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:0}
+  .saleL .head{font-size:16px;letter-spacing:.2em}
+  .saleL .apply{font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .saleL .old{font-size:14px;margin-top:8px}
+  .saleL .new{font-size:42px}
+  .saleL .save{font-size:13px;padding:6px 15px;margin-top:9px}
+  .saleL .scar{font-size:11px;margin-top:9px;padding:6px 8px}
+  .saleL .ntburst{width:76px;height:76px;top:5px;right:5px}
+  .saleL .ntburst .pct{font-size:22px}
+  .saleL .ntburst .lab{font-size:9px}
   .ntstk-gift{background:radial-gradient(circle at 30% 0%,#2E7D52 0%,#1B5E3A 100%);padding:20px 18px 18px;text-align:center;border-radius:16px}
   .ntstk-gift .ic{font-size:36px;line-height:1}
   .ntstk-gift .head{font-weight:900;font-size:17px;letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
@@ -530,7 +530,7 @@
     .nttag.sz-sm{width:93mm;height:68mm}
     .nttag.sz-lg{width:93mm;height:136mm}
     .ntstk{width:60mm}
-    .saleL{width:92mm}
+    .saleL{width:93mm;height:66mm}
     .ntpromo{width:88mm}}
   @media (max-width:860px){.grid2{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}
     .trust{grid-template-columns:1fr 1fr}.hero{padding:38px 28px;min-height:240px}.hero h1{font-size:31px}.hero::after{font-size:140px}
