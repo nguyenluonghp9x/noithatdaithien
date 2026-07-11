@@ -491,6 +491,17 @@
   .ntstk-gift .gval{display:inline-block;margin-top:12px;background:var(--gold);color:#241E1A;font-weight:900;font-size:14px;padding:7px 16px;border-radius:30px}
   .ntstk-gift .gval small{font-weight:700;font-size:10px;display:block;letter-spacing:.05em}
   .ntstk-gift .cond{margin-top:13px;font-size:11px;font-weight:700;background:rgba(0,0,0,.2);padding:8px 10px;border-radius:9px;line-height:1.35}
+  /* ===== TEM TỰ TÔ (LED 7 đoạn) ===== */
+  .ntpromo{width:88mm;background:#fff;color:var(--ink);border-radius:12px;overflow:hidden;box-shadow:0 6px 22px rgba(0,0,0,.14)}
+  .ntpromo-in{border:2px solid var(--sale);border-radius:12px;padding:5mm 5mm 4mm}
+  .ntpromo .pmhead{background:var(--sale);color:#fff;font-weight:900;font-size:15px;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:6px 8px;margin:-5mm -5mm 5mm;border-radius:10px 10px 0 0}
+  .ntpromo .seg7row{display:flex;align-items:flex-end;justify-content:center;gap:2.5mm}
+  .ntpromo .seg7cell{display:block}
+  .seg7{width:12mm;height:22mm;display:block}
+  .seg7 .sg{fill:#E4DDCE;stroke:#D3C9B4;stroke-width:.6}
+  .ntpromo .seg7dot{align-self:flex-end;font-weight:900;font-size:26px;line-height:1;color:#E4DDCE;margin:0 -1mm 1mm}
+  .ntpromo .seg7suf{align-self:flex-end;font-weight:900;font-size:24px;color:var(--sale);margin-bottom:2mm;margin-left:1mm}
+  .ntpromo .pmnote{text-align:center;font-size:9px;color:var(--muted);margin-top:4mm;font-style:italic}
   .gfitem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dotted var(--line);font-size:13px}
   .gfitem button{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:16px}
 
@@ -506,7 +517,8 @@
     .nttag{border:1px solid #bbb;border-radius:0}
     .nttag.sz-sm{width:93mm;height:68mm}
     .nttag.sz-lg{width:93mm;height:136mm}
-    .ntstk{width:60mm}}
+    .ntstk{width:60mm}
+    .ntpromo{width:88mm}}
   @media (max-width:860px){.grid2{grid-template-columns:1fr}.stat{grid-template-columns:1fr 1fr}
     .trust{grid-template-columns:1fr 1fr}.hero{padding:38px 28px;min-height:240px}.hero h1{font-size:31px}.hero::after{font-size:140px}
     .sechead h2{font-size:23px}#footer .in{grid-template-columns:1fr 1fr;gap:26px}}
@@ -1711,6 +1723,31 @@ function lblGift(g){const v=num(g.val);
     ${g.cond?`<div class="cond">${esc(g.cond)}</div>`:''}
   </div></div>`;
 }
+// 1 chữ số LED 7 đoạn — các đoạn in MỜ để dùng bút tô lên khi cần
+function seg7(){return `<svg class="seg7" viewBox="0 0 54 100" aria-hidden="true">`
+  +`<rect class="sg" x="12" y="3" width="30" height="9" rx="4"/>`   // a trên
+  +`<rect class="sg" x="3" y="12" width="9" height="34" rx="4"/>`   // f trái trên
+  +`<rect class="sg" x="42" y="12" width="9" height="34" rx="4"/>`  // b phải trên
+  +`<rect class="sg" x="12" y="45" width="30" height="9" rx="4"/>`  // g giữa
+  +`<rect class="sg" x="3" y="54" width="9" height="34" rx="4"/>`   // e trái dưới
+  +`<rect class="sg" x="42" y="54" width="9" height="34" rx="4"/>`  // c phải dưới
+  +`<rect class="sg" x="12" y="88" width="30" height="9" rx="4"/>`  // d dưới
+  +`</svg>`;}
+function lblPromo(c){
+  const n=Math.max(1,Math.min(8,c.digits||5)); const cells=[];
+  for(let i=0;i<n;i++){cells.push('<span class="seg7cell">'+seg7()+'</span>');
+    if(c.dot&&i<n-1&&(n-1-i)%3===0)cells.push('<span class="seg7dot">.</span>');}
+  return `<div class="ntstk ntpromo"><div class="ntpromo-in">
+    <div class="pmhead">${esc(c.title||'GIÁ KHUYẾN MÃI')}</div>
+    <div class="seg7row">${cells.join('')}${c.suffix?`<span class="seg7suf">${esc(c.suffix)}</span>`:''}</div>
+    <div class="pmnote">Dùng bút tô số khi áp dụng khuyến mãi</div>
+  </div></div>`;}
+function promoRead(){return {
+  title:($('#pmTitle')&&$('#pmTitle').value.trim())||'GIÁ KHUYẾN MÃI',
+  digits:$('#pmDigits')?+$('#pmDigits').value:5,
+  suffix:$('#pmSuffix')?$('#pmSuffix').value:'đ',
+  dot:$('#pmDot')?$('#pmDot').checked:true,
+  qty:$('#pmQty')?Math.max(1,Math.min(60,num($('#pmQty').value)||8)):8};}
 // Co nhỏ cỡ chữ tên SP để vừa 1 dòng (đo trực tiếp bề rộng)
 function fitNames(root){if(!root)return;root.querySelectorAll('.nt-name').forEach(el=>{
   el.style.fontSize='';let fs=parseFloat(getComputedStyle(el).fontSize)||18,guard=0;
@@ -1727,6 +1764,8 @@ function lblPreview(){
     const scar=$('#lblScar')?$('#lblScar').value.trim():'';
     const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);
     html=ids.map(id=>lblSale(prod(id),scar)).join('');
+  }else if(tagMode==='promo'){
+    const c=promoRead();const one=lblPromo(c);html=Array.from({length:c.qty},()=>one).join('');
   }else{
     html=giftStickers.map(lblGift).join('');
   }
@@ -1739,6 +1778,7 @@ function lblPrint(){
   let html='';
   if(tagMode==='base'){const staff=$('#lblStaff')&&$('#lblStaff').checked;const rows=[...$('#view').querySelectorAll('.lblSz')].filter(s=>s.value).sort((a,b)=>(a.value==='lg'?1:0)-(b.value==='lg'?1:0));html=rows.map(s=>lblTag(prod(s.dataset.id),{staff,size:s.value})).join('');}
   else if(tagMode==='sale'){const scar=$('#lblScar')?$('#lblScar').value.trim():'';const ids=[...$('#view').querySelectorAll('.lblChk:checked')].map(c=>c.value);html=ids.map(id=>lblSale(prod(id),scar)).join('');}
+  else if(tagMode==='promo'){const c=promoRead();const one=lblPromo(c);html=Array.from({length:c.qty},()=>one).join('');}
   else html=giftStickers.map(lblGift).join('');
   if(!html){toast('Chưa chọn/nhập nhãn nào để in');return;}
   const pa=$('#printArea');pa.innerHTML=`<div class="lblsheet">${html}</div>`;
@@ -1770,6 +1810,15 @@ function renderTag(){
       ${onSale.map(p=>`<tr><td><input type="checkbox" class="lblChk" value="${p.id}"></td><td>${esc(p.name)}</td><td class="num" style="text-decoration:line-through;color:var(--muted)">${fmt(p.price)}</td><td class="num">${fmt(p.salePrice)}</td><td class="num">-${Math.round((1-p.salePrice/p.price)*100)}%</td></tr>`).join('')}
       </tbody></table>`:'<p class="hint" style="margin-top:10px">Chưa có sản phẩm nào đang giảm giá. Vào tab <b>Kho</b> đặt <b>Giá KM</b> nhỏ hơn giá bán để tạo tem SALE.</p>'}
     </div>`;
+  }else if(tagMode==='promo'){
+    pane=`<div class="card">
+      <p class="hint" style="margin:0 0 12px">Tem khuyến mãi in sẵn <b>số dạng LED 7 đoạn (mờ)</b> — khi cần đổi giá, bạn <b>dùng bút tô</b> các đoạn thành con số. In một lần, dùng nhiều lần.</p>
+      <div class="row"><div class="setrow"><label>Tiêu đề tem</label><input id="pmTitle" value="GIÁ KHUYẾN MÃI"></div>
+        <div class="setrow" style="flex:0 0 130px"><label>Số chữ số</label><select id="pmDigits"><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option></select></div></div>
+      <div class="row"><div class="setrow" style="flex:0 0 150px"><label>Đuôi (sau số)</label><input id="pmSuffix" value="đ"></div>
+        <div class="setrow" style="flex:0 0 190px"><label class="permrow" style="background:#fff;margin-top:22px"><input type="checkbox" id="pmDot" checked><span class="pn">Dấu chấm phần nghìn</span></label></div>
+        <div class="setrow" style="flex:0 0 130px"><label>Số lượng in</label><input id="pmQty" inputmode="numeric" value="8"></div></div>
+    </div>`;
   }else{
     pane=`<div class="card">
       <p class="hint" style="margin:0 0 12px">Tem quà tặng nhập tay (dữ liệu sản phẩm chưa có trường quà). Thêm bao nhiêu tem tùy ý rồi in.</p>
@@ -1785,6 +1834,7 @@ function renderTag(){
       <button data-m="base" aria-pressed="${tagMode==='base'}">Thẻ chính</button>
       <button data-m="sale" aria-pressed="${tagMode==='sale'}">Sticker SALE</button>
       <button data-m="gift" aria-pressed="${tagMode==='gift'}">Sticker Quà</button>
+      <button data-m="promo" aria-pressed="${tagMode==='promo'}">Tem tự tô</button>
     </div>
     ${pane}
     <div class="card" style="margin-top:16px"><div class="sectitle"><h3 style="margin:0">Xem trước &amp; in</h3>
@@ -1803,6 +1853,9 @@ function renderTag(){
   const all=$('#lblAll');if(all)all.onchange=e=>{$('#view').querySelectorAll('.lblChk').forEach(c=>c.checked=e.target.checked);lblPreview();};
   $('#view').querySelectorAll('.lblChk').forEach(c=>c.onchange=lblPreview);
   const sc=$('#lblScar');if(sc)sc.oninput=lblPreview;
+  // promo: tem tự tô
+  ['pmTitle','pmSuffix','pmQty'].forEach(id=>{const el=$('#'+id);if(el)el.oninput=lblPreview;});
+  ['pmDigits','pmDot'].forEach(id=>{const el=$('#'+id);if(el)el.onchange=lblPreview;});
   const ga=$('#gfAdd');if(ga)ga.onclick=()=>{
     const gift=$('#gfName').value.trim();if(!gift){toast('Nhập tên quà tặng');return;}
     giftStickers.push({gift,val:$('#gfVal').value.trim(),cond:$('#gfCond').value.trim()});renderTag();
