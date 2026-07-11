@@ -1689,7 +1689,7 @@ function lblTag(p,opt){opt=opt||{};
         ${ledger}
         ${p.custom?'<div class="nt-custom">📐 Nhận đặt theo kích thước yêu cầu</div>':''}
       </div>
-      <div class="nt-price"><div class="nt-pl"><div class="lab">Giá bán</div><div class="nt-nowline"><span class="nt-now">${fmt(sellPrice(p))}</span>${hasSale?`<span class="nt-old">${fmt(p.price)}</span>`:''}</div></div>${qr}</div>
+      <div class="nt-price"><div class="nt-pl"><div class="lab">Giá bán</div><div class="nt-nowline"><span class="nt-now">${fmt(p.price)}</span></div></div>${qr}</div>
     </div>${staff}</div>`;
 }
 function lblSale(p,scar){
