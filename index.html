@@ -531,6 +531,20 @@
     #printArea .lblsheet{display:flex;flex-wrap:wrap;gap:0;align-content:flex-start}
     .nttag,.ntstk{box-shadow:none!important;break-inside:avoid;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}
     .nttag *,.ntstk *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    /* ===== IN RÕ NÉT: ép chữ tem sang tông đậm/đen + nét dày hơn để không bị phai khi in ===== */
+    #printArea{-webkit-font-smoothing:antialiased;text-rendering:geometricPrecision}
+    .nttag .nt-name{color:#1E1A15!important}
+    .nttag .nt-eyebrow,.nttag .nt-sku,.nttag .nt-lrow .k,.nttag .ntqr-cap{color:#3A322A!important}
+    .nttag .nt-eyebrow{font-weight:800!important}
+    .nttag .nt-sku,.nttag .nt-lrow .k,.nttag .ntqr-cap{font-weight:700!important}
+    .nttag .nt-lrow .v{color:#1E1A15!important;font-weight:700!important}
+    .nttag .nt-old{color:#544D45!important}
+    .nttag .nt-sku b{color:#1E1A15!important}
+    /* đường kẻ đậm & liền nét (kẻ chấm nhạt in ra hay đứt/mờ) */
+    .nttag .nt-ledger{border-color:#8F8676!important}
+    .nttag .nt-lrow{border-bottom:1px solid #C0B6A4!important}
+    .nttag .nt-lrow:last-child{border-bottom:0!important}
+    .nttag .nt-eyebrow .bar{height:2.5px!important}
     .nttag{border:1px solid #bbb;border-radius:0}
     .nttag.sz-sm{width:93mm;height:68mm}
     .nttag.sz-lg{width:93mm;height:136mm}
