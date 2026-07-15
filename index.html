@@ -1481,6 +1481,7 @@ function openCart(){
       <div class="setrow"><label>Số điện thoại *</label><input id="o_phone" value="${esc(buyer.phone)}" placeholder="09xx xxx xxx" inputmode="tel"></div>
       <div class="setrow"><label>Địa chỉ giao hàng</label><input id="o_addr" value="${esc(buyer.address)}" placeholder="Số nhà, đường, phường..."></div>
       <div class="setrow"><label>Ghi chú</label><textarea id="o_note" rows="2">${esc(buyer.note)}</textarea></div>
+      <p class="hint" style="margin:2px 0 10px">Nhập đúng SĐT để shop gọi xác nhận & giao hàng. Cần tư vấn trước khi đặt? <a href="${zaloLink()}" target="_blank" rel="noopener" style="color:var(--zalo);font-weight:700">Nhắn Zalo hotline ↗</a></p>
       <button class="btn" id="oSubmit">Chốt đơn</button>`
     :`<div class="empty" style="border:0">Giỏ hàng đang trống.<br>Hãy thêm sản phẩm bạn muốn mua.</div>`}
   </div>`;
@@ -1505,6 +1506,9 @@ async function submitOrder(){
   const ids=inCart();if(!ids.length){toast('Giỏ trống');return;}
   const name=$('#o_name').value.trim(),phone=$('#o_phone').value.trim();
   if(!name||!phone){toast('Vui lòng nhập Họ tên và Số điện thoại.');return;}
+  // Kiểm tra SĐT Việt Nam để tránh gõ nhầm (di động 10 số, cố định 10-11 số, hoặc +84)
+  const phClean=phone.replace(/[\s.\-()]/g,'');
+  if(!/^(0\d{9,10}|\+?84\d{9,10})$/.test(phClean)){toast('Số điện thoại chưa đúng — nhập SĐT Việt Nam (VD: 0912 345 678) để shop gọi xác nhận & giao hàng.');const el=$('#o_phone');if(el){el.focus();el.style.borderColor='var(--sale)';}return;}
   buyer={name,phone,address:$('#o_addr').value.trim(),note:$('#o_note').value.trim()};
   await DB.set('dt:buyer',buyer);
   const items=ids.map(id=>{const p=prod(id);const vv=getVariant(id);return{id,sku:p.sku,name:p.name,qty:cart[id],price:sellPrice(p),color:vv.color,size:vv.size};});
@@ -1512,7 +1516,7 @@ async function submitOrder(){
   const o={id:uid(),code:'DH'+Date.now().toString().slice(-7),date:new Date().toISOString(),buyer:{...buyer},items,total,status:'cho'};
   orders.unshift(o);await saveO();
   // Gửi về Google Sheet (nếu đã cấu hình Apps Script ở Cài đặt)
-  if(settings.appsScriptUrl){try{fetch(settings.appsScriptUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'order',order:o})});}catch(e){}}
+  if(settings.appsScriptUrl){try{fetch(settings.appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'order',order:o,text:buildOrderText(o),shop:settings.shop||''})});}catch(e){}}
   showOrderDone(o);
 }
 function vietQRUrl(amount,info){const b=settings.bank;if(!b||!b.bin||!b.acc)return '';
@@ -1525,9 +1529,10 @@ function showOrderDone(o){
     ${qr?`<div style="text-align:center;margin-bottom:14px"><img src="${qr}" alt="VietQR" style="max-width:230px;width:100%;border:1px solid var(--line);border-radius:12px"><div class="hint">Quét bằng app ngân hàng · Nội dung: ${o.code}</div></div>`:''}
     <textarea readonly style="width:100%;height:150px;background:var(--cream);border:1px solid var(--line2);border-radius:10px;padding:12px;font-size:13px">${esc(text)}</textarea>
     <div class="row" style="margin-top:12px">
-      <button class="btn" id="copyZalo" style="flex:2">📋 Sao chép & gửi Zalo</button>
-      <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">${svgIcon('phone',15)} Gọi</a>
+      <button class="btn" id="copyZalo" style="flex:2">📋 Gửi đơn qua Zalo hotline</button>
+      <a class="btn alt" href="${telLink()}" style="flex:1;text-align:center;text-decoration:none">${svgIcon('phone',15)} Gọi shop</a>
     </div>
+    <p class="hint" style="margin:10px 0 0;text-align:center">Lỡ nhập sai số điện thoại? <a href="${zaloLink()}" target="_blank" rel="noopener" style="color:var(--zalo);font-weight:700">Nhắn Zalo hotline ↗</a> để shop liên hệ lại ngay.</p>
     <button class="btn alt" id="doneClear" style="margin-top:10px">Hoàn tất · Xóa giỏ</button>
   </div>`;
   $('#ov').classList.add('show');
