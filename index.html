@@ -1515,6 +1515,8 @@ async function submitOrder(){
   const total=items.reduce((s,i)=>s+i.price*i.qty,0);
   const o={id:uid(),code:'DH'+Date.now().toString().slice(-7),date:new Date().toISOString(),buyer:{...buyer},items,total,status:'cho'};
   orders.unshift(o);await saveO();
+  // Gửi đơn lên cloud (bảng orders) để admin thấy trên MỌI thiết bị — khách vãng lai vẫn thêm được nhờ policy anon insert
+  if(DB.supaOn&&DB.client()){try{await DB.client().from('orders').insert({code:o.code,buyer:o.buyer,items:o.items,total:o.total,status:'cho'});}catch(e){console.warn('Chưa gửi đơn lên cloud (bảng orders chưa tạo?):',e.message||e);}}
   // Gửi về Google Sheet (nếu đã cấu hình Apps Script ở Cài đặt)
   if(settings.appsScriptUrl){try{fetch(settings.appsScriptUrl,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'order',order:o,text:buildOrderText(o),shop:settings.shop||''})});}catch(e){}}
   showOrderDone(o);
@@ -1544,8 +1546,17 @@ $('#ovClose').onclick=closeOv;$('#ov').onclick=e=>{if(e.target.id==='ov')closeOv
 
 /* ====================== QUẢN TRỊ: ĐƠN KHÁCH ĐẶT ONLINE ====================== */
 const ORDER_ST={cho:['Chờ xác nhận','#B6791F','#FBF0DA'],xac:['Đã xác nhận','#0068FF','#E9F0F8'],giao:['Đang giao','#7E5BEF','#EFEAFB'],xong:['Hoàn tất','#2E7D52','#E7F3EC'],huy:['Đã hủy','#B23A2A','#F7DED9']};
-let donFilter='all';
-function pendCount(){return (typeof orders!=='undefined')?orders.filter(o=>(o.status||'cho')==='cho').length:0;}
+let donFilter='all', cloudOrders=null, ordersCloudErr=null;
+function ordersList(){return cloudOrders!==null?cloudOrders:(typeof orders!=='undefined'?orders:[]);} // ưu tiên đơn cloud
+function pendCount(){return ordersList().filter(o=>(o.status||'cho')==='cho').length;}
+async function loadCloudOrders(){
+  cloudOrders=null;ordersCloudErr=null;
+  if(!DB.supaOn||!DB.client())return;
+  try{const {data,error}=await DB.client().from('orders').select('*').order('created_at',{ascending:false});
+    if(error)throw error;
+    cloudOrders=(data||[]).map(r=>({id:r.id,code:r.code,date:r.created_at,buyer:r.buyer||{},items:r.items||[],total:r.total||0,status:r.status||'cho'}));
+  }catch(e){ordersCloudErr=e.message||String(e);cloudOrders=null;}
+}
 function orderCard(o){
   const st=ORDER_ST[o.status||'cho']||ORDER_ST.cho, b=o.buyer||{};
   const tel=(b.phone||'').replace(/[^\d+]/g,'');
@@ -1576,20 +1587,36 @@ function orderCard(o){
     </div>
   </div>`;
 }
-function renderDonhang(){
-  const list=orders.filter(o=>donFilter==='all'||(o.status||'cho')===donFilter);
-  const cnt={};Object.keys(ORDER_ST).forEach(k=>cnt[k]=orders.filter(o=>(o.status||'cho')===k).length);
-  $('#view').innerHTML=`<h2>Đơn khách đặt online (${orders.length})</h2>
-    <p class="hint" style="margin:-6px 0 14px">Đơn khách đặt trên website hiện ở đây. Xác nhận → chuyển giao → hoàn tất. Bấm SĐT để gọi, "Sao chép" để gửi Zalo/nội bộ.</p>
+async function renderDonhang(){
+  if($('#view'))$('#view').innerHTML='<h2>Đơn khách đặt online</h2><p class="muted">Đang tải đơn…</p>';
+  await loadCloudOrders();
+  renderTabs();
+  const onCloud=cloudOrders!==null;
+  const src=ordersList();
+  const list=src.filter(o=>donFilter==='all'||(o.status||'cho')===donFilter);
+  const cnt={};Object.keys(ORDER_ST).forEach(k=>cnt[k]=src.filter(o=>(o.status||'cho')===k).length);
+  const setup = onCloud ? '' : `<div class="card" style="border:1px solid var(--warn);background:#FBF3E2;margin-bottom:14px">
+      <b>⚠️ Chưa bật "nhận đơn lên cloud"</b> — hiện chỉ hiện đơn đặt trên <b>chính máy này</b>. Để nhận đơn của MỌI khách trên mọi thiết bị, cần tạo bảng <code>orders</code> trong Supabase (chạy 1 đoạn SQL — xem hướng dẫn đã gửi).${ordersCloudErr?`<div class="muted" style="font-size:12px;margin-top:6px">Chi tiết kỹ thuật: ${esc(ordersCloudErr)}</div>`:''}</div>`;
+  $('#view').innerHTML=`<h2>Đơn khách đặt online (${src.length})</h2>
+    <p class="hint" style="margin:-6px 0 14px">${onCloud?'✅ Đang nhận đơn từ cloud (mọi thiết bị).':'Đơn khách đặt hiện ở đây.'} Xác nhận → chuyển giao → hoàn tất. Bấm SĐT để gọi.</p>
+    ${setup}
     <div class="filterbar">
-      <button class="chip" data-f="all" aria-pressed="${donFilter==='all'}">Tất cả (${orders.length})</button>
+      <button class="chip" data-f="all" aria-pressed="${donFilter==='all'}">Tất cả (${src.length})</button>
       ${Object.entries(ORDER_ST).map(([k,v])=>`<button class="chip" data-f="${k}" aria-pressed="${donFilter===k}">${v[0]} (${cnt[k]||0})</button>`).join('')}
+      <button class="btn sm alt" id="donReload" style="margin-left:auto">↻ Tải lại</button>
     </div>
-    ${list.length?list.map(orderCard).join(''):`<div class="empty">${orders.length?'Không có đơn ở trạng thái này.':'Chưa có đơn khách nào. Khi khách đặt trên web, đơn sẽ hiện ngay tại đây.'}</div>`}`;
+    ${list.length?list.map(orderCard).join(''):`<div class="empty">${src.length?'Không có đơn ở trạng thái này.':'Chưa có đơn khách nào. Khi khách đặt trên web, đơn sẽ hiện ngay tại đây.'}</div>`}`;
+  const rl=$('#donReload');if(rl)rl.onclick=renderDonhang;
   $('#view').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{donFilter=b.dataset.f;renderDonhang();});
-  $('#view').querySelectorAll('[data-ost]').forEach(b=>b.onclick=async()=>{const o=orders.find(x=>x.id===b.dataset.id);if(o){o.status=b.dataset.ost;await saveO();renderTabs();renderDonhang();toast('Đơn '+o.code+': '+ORDER_ST[o.status][0]);}});
-  $('#view').querySelectorAll('[data-ocopy]').forEach(b=>b.onclick=async()=>{const o=orders.find(x=>x.id===b.dataset.ocopy);if(o){try{await navigator.clipboard.writeText(buildOrderText(o));toast('Đã sao chép đơn '+o.code);}catch(e){toast('Không sao chép được');}}});
-  $('#view').querySelectorAll('[data-odel]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('Xóa đơn này?','Không thể hoàn tác.')){orders=orders.filter(x=>x.id!==b.dataset.odel);await saveO();renderTabs();renderDonhang();}});
+  $('#view').querySelectorAll('[data-ost]').forEach(b=>b.onclick=async()=>{const id=b.dataset.id,ns=b.dataset.ost;
+    if(onCloud){try{const {error}=await DB.client().from('orders').update({status:ns}).eq('id',id);if(error)throw error;}catch(e){toast('Lỗi cập nhật: '+(e.message||e));return;}}
+    else{const o=orders.find(x=>x.id===id);if(o){o.status=ns;await saveO();}}
+    toast('Đơn: '+ORDER_ST[ns][0]);renderDonhang();});
+  $('#view').querySelectorAll('[data-ocopy]').forEach(b=>b.onclick=async()=>{const o=src.find(x=>x.id===b.dataset.ocopy);if(o){try{await navigator.clipboard.writeText(buildOrderText(o));toast('Đã sao chép đơn '+o.code);}catch(e){toast('Không sao chép được');}}});
+  $('#view').querySelectorAll('[data-odel]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('Xóa đơn này?','Không thể hoàn tác.')){const id=b.dataset.odel;
+    if(onCloud){try{const {error}=await DB.client().from('orders').delete().eq('id',id);if(error)throw error;}catch(e){toast('Lỗi xóa: '+(e.message||e));return;}}
+    else{orders=orders.filter(x=>x.id!==id);await saveO();}
+    renderDonhang();}});
 }
 
 /* ====================== QUẢN TRỊ: BÁN HÀNG ====================== */
