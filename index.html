@@ -177,7 +177,7 @@
   .line-item .x{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:16px}
   .tot{display:flex;justify-content:space-between;font-weight:800;font-size:18px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
   /* ===== POS (Bán hàng tại quầy) ===== */
-  .posgrid{grid-template-columns:1.2fr 1fr}
+  .bangrid{grid-template-columns:1.2fr 1fr}
   .possearch{position:relative;display:flex;align-items:center;gap:9px;border:1.5px solid var(--orange-l);border-radius:11px;padding:0 12px;background:var(--cream)}
   .possearch:focus-within{border-color:var(--orange)}
   .possearch .ps-ic{color:var(--muted);display:flex;flex:none}
@@ -186,20 +186,25 @@
   .possug.show{display:block}
   .sug-it{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer}
   .sug-it:hover{background:var(--cream)}
-  .posline{display:grid;grid-template-columns:1fr 108px 74px 96px 26px;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
-  .posline.low{background:#FCF3F1;border-radius:8px;padding:10px 8px}
-  .pl-name{min-width:0}.pl-name b{display:block;font-size:14px;line-height:1.25}.pl-name .muted{font-size:11.5px}
-  .pl-f{display:flex;flex-direction:column;gap:3px}
+  .posline{padding:11px 0;border-bottom:1px solid var(--line)}
+  .posline.low{background:#FCF3F1;border-radius:8px;padding:10px}
+  .pl-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+  .pl-name{min-width:0;flex:1 1 auto}.pl-name b{font-size:14px;line-height:1.3}.pl-name .muted{font-size:11.5px;display:block;margin-top:1px}
+  .pl-ctrl{display:grid;grid-template-columns:1.1fr .7fr 1fr 1.1fr;gap:10px;align-items:end}
+  .pl-f{display:flex;flex-direction:column;gap:4px;min-width:0}
   .pl-f label{font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700}
-  .pl-f input{border:1px solid var(--line2);border-radius:7px;padding:7px 8px;font-size:13px;width:100%;text-align:right;font-variant-numeric:tabular-nums}
-  .pl-lt{font-weight:700;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
-  .posline .x{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:18px;line-height:1}
+  .pl-f input{border:1px solid var(--line2);border-radius:7px;padding:8px;font-size:13px;width:100%;text-align:right;font-variant-numeric:tabular-nums;background:#fff}
+  .pl-f input.pl-disc{text-align:left}
+  .pl-price{font-weight:600;font-size:14px;padding:8px 0;text-align:right;font-variant-numeric:tabular-nums}
+  .pl-lt{font-weight:800;font-size:15px;padding:8px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--orange-d)}
+  .posline .x{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:20px;line-height:1;flex:none}
   .postot{margin-top:16px;border-top:2px solid var(--orange-l);padding-top:12px}
   .postot .r{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:4px 0;color:var(--ink)}
   .postot .r span:last-child{font-variant-numeric:tabular-nums;font-weight:600}
-  .postot .r.grand{font-size:20px;font-weight:800;margin-top:6px;padding-top:10px;border-top:1px dashed var(--line2)}
+  .postot .r.grand{font-size:19px;font-weight:800;margin-top:6px;padding-top:10px;border-top:1px dashed var(--line2)}
   .postot .r.grand span:last-child{color:var(--orange-d)}
-  @media(max-width:760px){.posgrid{grid-template-columns:1fr}.posline{grid-template-columns:1fr 1fr;gap:8px}.posline .pl-name{grid-column:1/-1}.pl-lt{text-align:left}}
+  .postot .r.grand.remain span:last-child{color:var(--sale)}
+  @media(max-width:760px){.bangrid{grid-template-columns:1fr}.pl-ctrl{grid-template-columns:1fr 1fr}}
   .stat{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
   .stat .c{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
   .stat .c.accent{background:linear-gradient(135deg,var(--orange),var(--orange-d));color:#fff;border:0}
@@ -836,7 +841,7 @@ let products=[], cats=[], vouchers=[], orders=[], staff=[], settings={};
 let area='shop', tab='ban';
 let cart={}, buyer={name:'',phone:'',address:'',note:''}, cartVariant={}; // khách
 let posCart={}, lines=[];                                   // quản trị: bán & nhập/xuất  (posCart[id]={qty,price})
-let posInfo={name:'',phone:'',addr:'',deliver:'',pay:'Tiền mặt',note:'',disc:0}; // thông tin đơn bán tại quầy
+let posInfo={name:'',phone:'',addr:'',deliver:'',pay:'Tiền mặt',note:'',disc:0,deposit:0}; // thông tin đơn bán tại quầy  (posCart[id]={qty,disc})
 let active='__all', search='', editingCat=false;
 let session={staff:null};
 let productPageId=null; // id sản phẩm đang xem ở trang chi tiết độc lập (?p=...)
@@ -1720,20 +1725,37 @@ async function renderDonhang(){
 
 /* ====================== QUẢN TRỊ: BÁN HÀNG ====================== */
 function prodOptions(){return products.map(p=>`<option value="${p.id}">${esc(p.name)} (tồn ${p.stock})</option>`).join('');}
-function posSubtotal(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+(+posCart[id].price||0)*(+posCart[id].qty||0),0);}
-function posTotal(){return Math.max(0,posSubtotal()-(+posInfo.disc||0));}
-function updatePosTotals(){const sub=posSubtotal();
-  const se=$('#bSub');if(se)se.textContent=fmt(sub);
-  const de=$('#bDiscShow');if(de)de.textContent='-'+fmt(+posInfo.disc||0);
-  const te=$('#bTot');if(te)te.textContent=fmt(posTotal());}
-function posLineHTML(id){const p=prod(id),l=posCart[id];const low=l.qty>p.stock;
+function lineDiscAmt(price,qty,disc){disc=(disc==null?'':disc).toString().trim();const base=price*qty;if(!disc)return 0;
+  if(/%$/.test(disc)){const p=parseFloat(disc);return isNaN(p)?0:Math.round(base*Math.max(0,Math.min(100,p))/100);}
+  return Math.min(base,Math.max(0,parseFloat(disc.replace(/[^\d.]/g,''))||0));}
+function lineBase(id){const p=prod(id);return sellPrice(p)*(+posCart[id].qty||0);}
+function lineNet(id){const p=prod(id),l=posCart[id];const price=sellPrice(p);return price*(+l.qty||0)-lineDiscAmt(price,+l.qty||0,l.disc);}
+function posSubtotal(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineBase(id),0);}
+function posLineDisc(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);}
+function posAfterLines(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineNet(id),0);}
+function posTotal(){return Math.max(0,posAfterLines()-(+posInfo.disc||0));}
+function posRemain(){return Math.max(0,posTotal()-(+posInfo.deposit||0));}
+function updatePosTotals(){
+  const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
+  set('#bSub',fmt(posSubtotal()));
+  set('#bCK','-'+fmt(posLineDisc()));
+  set('#bDiscShow','-'+fmt(+posInfo.disc||0));
+  set('#bTot',fmt(posTotal()));
+  set('#bDep','-'+fmt(+posInfo.deposit||0));
+  set('#bRemain',fmt(posRemain()));}
+function posLineHTML(id){const p=prod(id),l=posCart[id];const low=l.qty>p.stock;const price=sellPrice(p);
   return `<div class="posline${low?' low':''}" data-id="${id}">
-    <div class="pl-name"><b>${esc(p.name)}</b><span class="muted">${esc(p.sku||'—')} · tồn ${p.stock}${low?' ⚠ thiếu':''}</span></div>
-    <div class="pl-f"><label>Đơn giá</label><input class="pl-price" inputmode="numeric" value="${l.price}"></div>
-    <div class="pl-f"><label>SL</label><input class="pl-qty" inputmode="numeric" value="${l.qty}"></div>
-    <div class="pl-lt num" data-lt>${fmt((+l.price||0)*(+l.qty||0))}</div>
-    <button class="x" data-x title="Bỏ">×</button></div>`;}
-function addPos(id){const p=prod(id);if(!p)return;if(posCart[id])posCart[id].qty++;else posCart[id]={qty:1,price:sellPrice(p)};renderBan();const inp=$('#bSearch');if(inp)inp.focus();}
+    <div class="pl-top">
+      <div class="pl-name"><b>${esc(p.name)}</b> <span class="muted">${esc(p.sku||'—')} · tồn ${p.stock}${low?' ⚠ thiếu hàng':''}</span></div>
+      <button class="x" data-x title="Bỏ khỏi đơn">×</button>
+    </div>
+    <div class="pl-ctrl">
+      <div class="pl-f"><label>Đơn giá</label><div class="pl-price">${fmt(price)}</div></div>
+      <div class="pl-f"><label>SL</label><input class="pl-qty" inputmode="numeric" value="${l.qty}"></div>
+      <div class="pl-f"><label>Chiết khấu</label><input class="pl-disc" value="${esc(l.disc||'')}" placeholder="0 · 10% · 50000"></div>
+      <div class="pl-f"><label>Thành tiền</label><div class="pl-lt" data-lt>${fmt(lineNet(id))}</div></div>
+    </div></div>`;}
+function addPos(id){const p=prod(id);if(!p)return;if(posCart[id])posCart[id].qty++;else posCart[id]={qty:1,disc:''};renderBan();const inp=$('#bSearch');if(inp)inp.focus();}
 function bindPosSearch(){const inp=$('#bSearch'),sug=$('#bSug');if(!inp)return;
   const draw=()=>{const q=inp.value.trim().toLowerCase();
     if(!q){sug.classList.remove('show');sug.innerHTML='';return;}
@@ -1747,15 +1769,17 @@ function bindPosSearch(){const inp=$('#bSearch'),sug=$('#bSug');if(!inp)return;
 function bindPosInfo(){
   [['bName','name'],['bPhone','phone'],['bAddr','addr'],['bDeliver','deliver'],['bNote','note']].forEach(([id,k])=>{const el=$('#'+id);if(el)el.oninput=()=>posInfo[k]=el.value;});
   const pay=$('#bPay');if(pay)pay.onchange=()=>posInfo.pay=pay.value;
-  const d=$('#bDisc');if(d)d.oninput=()=>{posInfo.disc=Math.max(0,Math.min(posSubtotal(),num(d.value)));updatePosTotals();};}
+  const d=$('#bDisc');if(d)d.oninput=()=>{posInfo.disc=Math.max(0,Math.min(posAfterLines(),num(d.value)));updatePosTotals();};
+  const dep=$('#bDeposit');if(dep)dep.oninput=()=>{posInfo.deposit=Math.max(0,Math.min(posTotal(),num(dep.value)));updatePosTotals();};}
 function bindPosLines(){$('#bLines').querySelectorAll('.posline').forEach(row=>{const id=row.dataset.id;if(!posCart[id])return;
-  const pr=row.querySelector('.pl-price'),qt=row.querySelector('.pl-qty'),lt=row.querySelector('[data-lt]');
-  const upd=()=>{posCart[id].price=Math.max(0,num(pr.value));posCart[id].qty=Math.max(1,num(qt.value));lt.textContent=fmt(posCart[id].price*posCart[id].qty);posInfo.disc=Math.min(posInfo.disc,posSubtotal());updatePosTotals();};
-  if(pr)pr.oninput=upd;if(qt)qt.oninput=upd;
+  const qt=row.querySelector('.pl-qty'),dc=row.querySelector('.pl-disc'),lt=row.querySelector('[data-lt]');
+  const upd=()=>{posCart[id].qty=Math.max(1,num(qt.value));posCart[id].disc=dc.value;lt.textContent=fmt(lineNet(id));
+    posInfo.disc=Math.min(+posInfo.disc||0,posAfterLines());posInfo.deposit=Math.min(+posInfo.deposit||0,posTotal());updatePosTotals();};
+  if(qt)qt.oninput=upd;if(dc)dc.oninput=upd;
   const x=row.querySelector('[data-x]');if(x)x.onclick=()=>{delete posCart[id];renderBan();};});}
 function renderBan(){
   const ids=Object.keys(posCart).filter(id=>prod(id));
-  $('#view').innerHTML=`<h2>Bán hàng tại quầy</h2><div class="grid2 posgrid">
+  $('#view').innerHTML=`<h2>Bán hàng tại quầy</h2><div class="grid2 bangrid">
     <div class="card">
       <h3>Sản phẩm</h3>
       <div class="possearch">
@@ -1764,7 +1788,7 @@ function renderBan(){
         <div class="possug" id="bSug"></div>
       </div>
       <div id="bLines" style="margin-top:14px">${ids.length?ids.map(posLineHTML).join(''):'<div class="empty" style="border:0">Chưa có sản phẩm.<br>Gõ tên hoặc mã ở ô trên để thêm vào đơn.</div>'}</div>
-      ${ids.length?'<p class="hint" style="margin-top:8px">💡 Sửa trực tiếp <b>Đơn giá</b> từng dòng để giảm giá riêng cho sản phẩm đó.</p>':''}
+      ${ids.length?'<p class="hint" style="margin-top:8px">💡 Cột <b>Chiết khấu</b>: gõ số tiền (vd <b>50000</b>) hoặc phần trăm (vd <b>10%</b>) để giảm riêng dòng đó.</p>':''}
     </div>
     <div class="card"><h3>Thông tin khách &amp; đơn</h3>
       <div class="setrow"><label>Tên khách hàng</label><input id="bName" value="${esc(posInfo.name)}" placeholder="Nguyễn Văn A"></div>
@@ -1773,11 +1797,15 @@ function renderBan(){
       <div class="setrow"><label>Địa chỉ giao hàng</label><input id="bAddr" value="${esc(posInfo.addr)}" placeholder="Số nhà, đường, phường, quận..."></div>
       <div class="row"><div class="setrow" style="flex:1"><label>Thanh toán</label><select id="bPay">${['Tiền mặt','Chuyển khoản','Quẹt thẻ','Công nợ'].map(o=>`<option ${o===posInfo.pay?'selected':''}>${o}</option>`).join('')}</select></div>
         <div class="setrow" style="flex:1"><label>Giảm giá cả đơn (đ)</label><input id="bDisc" inputmode="numeric" value="${posInfo.disc||''}" placeholder="0"></div></div>
-      <div class="setrow"><label>Ghi chú</label><textarea id="bNote" rows="2" placeholder="Yêu cầu riêng, lắp đặt...">${esc(posInfo.note)}</textarea></div>
+      <div class="row"><div class="setrow" style="flex:1"><label>Đặt cọc (đ)</label><input id="bDeposit" inputmode="numeric" value="${posInfo.deposit||''}" placeholder="0"></div>
+        <div class="setrow" style="flex:1"><label>Ghi chú</label><input id="bNote" value="${esc(posInfo.note)}" placeholder="Yêu cầu riêng, lắp đặt..."></div></div>
       <div class="postot">
         <div class="r"><span>Tạm tính</span><span id="bSub">${fmt(posSubtotal())}</span></div>
-        <div class="r"><span>Giảm giá</span><span id="bDiscShow">-${fmt(posInfo.disc||0)}</span></div>
-        <div class="r grand"><span>TỔNG THU</span><span id="bTot">${fmt(posTotal())}</span></div>
+        <div class="r"><span>Chiết khấu sản phẩm</span><span id="bCK">-${fmt(posLineDisc())}</span></div>
+        <div class="r"><span>Giảm giá cả đơn</span><span id="bDiscShow">-${fmt(posInfo.disc||0)}</span></div>
+        <div class="r grand"><span>TỔNG TIỀN</span><span id="bTot">${fmt(posTotal())}</span></div>
+        <div class="r"><span>Đặt cọc</span><span id="bDep">-${fmt(posInfo.deposit||0)}</span></div>
+        <div class="r grand remain"><span>CÒN PHẢI THU</span><span id="bRemain">${fmt(posRemain())}</span></div>
       </div>
       <button class="btn" id="bDone" style="margin-top:12px">✓ Hoàn tất &amp; in hóa đơn</button>
       <p class="hint">Tạo phiếu bán, trừ tồn kho, in hóa đơn cho khách.</p>
@@ -1788,19 +1816,23 @@ function renderBan(){
 async function completeSale(){
   const ids=Object.keys(posCart).filter(id=>prod(id));if(!ids.length){toast('Chưa có sản phẩm trong đơn');return;}
   for(const id of ids){if(posCart[id].qty>prod(id).stock){toast('Tồn không đủ: '+prod(id).name);return;}}
-  const items=ids.map(id=>{const p=prod(id);return{id,sku:p.sku,name:p.name,qty:+posCart[id].qty,price:+posCart[id].price||0,cost:p.cost};});
-  const sub=items.reduce((s,i)=>s+i.price*i.qty,0);
-  const disc=Math.max(0,Math.min(sub,+posInfo.disc||0));
-  const total=sub-disc;
+  const items=ids.map(id=>{const p=prod(id),list=sellPrice(p),qty=+posCart[id].qty,net=lineNet(id),eff=qty?Math.round(net/qty):list;
+    return{id,sku:p.sku,name:p.name,qty,price:eff,listPrice:list,disc:list*qty-net,cost:p.cost};});
+  const sub=ids.reduce((s,id)=>s+lineBase(id),0);
+  const lineD=ids.reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);
+  const afterLines=sub-lineD;
+  const orderDisc=Math.max(0,Math.min(afterLines,+posInfo.disc||0));
+  const total=afterLines-orderDisc;
+  const deposit=Math.max(0,Math.min(total,+posInfo.deposit||0));
   ids.forEach(id=>{prod(id).stock-=posCart[id].qty;});
   const cus=[posInfo.name,posInfo.phone].filter(Boolean).join(' · ');
   const v={id:uid(),code:'XB'+Date.now().toString().slice(-7),type:'ban',date:new Date().toISOString(),
     partner:cus||'Khách lẻ',pay:posInfo.pay,note:posInfo.note,
     buyer:{name:posInfo.name.trim(),phone:posInfo.phone.trim(),address:posInfo.addr.trim()},deliver:posInfo.deliver,
-    subtotal:sub,discount:disc,items,total,staff:session.staff.name};
+    subtotal:sub,lineDisc:lineD,discount:orderDisc,deposit,remain:total-deposit,items,total,staff:session.staff.name};
   vouchers.unshift(v);await saveP();await saveV();
-  posCart={};posInfo={name:'',phone:'',addr:'',deliver:'',pay:'Tiền mặt',note:'',disc:0};
-  toast('Đã bán · Thu '+fmt(total));printVoucher(v);renderBan();
+  posCart={};posInfo={name:'',phone:'',addr:'',deliver:'',pay:'Tiền mặt',note:'',disc:0,deposit:0};
+  toast('Đã bán · '+(deposit?'Còn thu '+fmt(total-deposit):'Thu '+fmt(total)));printVoucher(v);renderBan();
 }
 
 /* ====================== QUẢN TRỊ: KHO ====================== */
@@ -2493,7 +2525,7 @@ function printVoucher(v){
     <table style="margin-top:12px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #999;padding:6px">Sản phẩm</th><th style="border-bottom:1px solid #999;padding:6px">Mã</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">SL</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">Đơn giá</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">Thành tiền</th></tr></thead><tbody>
     ${v.items.map(i=>`<tr><td style="padding:6px;border-bottom:1px solid #ddd">${esc(i.name)}</td><td style="padding:6px;border-bottom:1px solid #ddd">${esc(i.sku||'')}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${i.qty}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${fmt(i.price)}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${fmt(i.qty*i.price)}</td></tr>`).join('')}
     </tbody></table>
-    <div style="text-align:right;margin-top:10px;font-size:13px">${(v.discount>0)?`<div>Tạm tính: ${fmt(v.subtotal||(v.total+v.discount))}</div><div>Giảm giá: -${fmt(v.discount)}</div>`:''}<div style="font-weight:800;font-size:16px;margin-top:4px">TỔNG: ${fmt(v.total)}</div></div>
+    <div style="text-align:right;margin-top:10px;font-size:13px">${(v.lineDisc>0||v.discount>0)?`<div>Tạm tính: ${fmt(v.subtotal||v.total)}</div>`:''}${v.lineDisc>0?`<div>Chiết khấu SP: -${fmt(v.lineDisc)}</div>`:''}${v.discount>0?`<div>Giảm giá đơn: -${fmt(v.discount)}</div>`:''}<div style="font-weight:800;font-size:16px;margin-top:4px">TỔNG: ${fmt(v.total)}</div>${v.deposit>0?`<div>Đặt cọc: -${fmt(v.deposit)}</div><div style="font-weight:800;color:#B23A2A">CÒN PHẢI THU: ${fmt(v.remain!=null?v.remain:(v.total-v.deposit))}</div>`:''}</div>
     ${v.note?`<div style="margin-top:8px">Ghi chú: ${esc(v.note)}</div>`:''}
     <div style="display:flex;justify-content:space-between;margin-top:46px;font-size:13px"><div style="text-align:center">Người lập<br><br>.................</div><div style="text-align:center">${v.type==='nhap'?'Người giao':'Người nhận'}<br><br>.................</div></div>
   </div>`;
