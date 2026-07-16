@@ -277,14 +277,18 @@
   #footer .copy{border-top:1px solid rgba(255,255,255,.1);text-align:center;font-size:11.5px;letter-spacing:.04em;padding:20px;color:#8E8275}
 
   /* cart rows */
-  .crow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .crow{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
   .cthumb{width:46px;height:46px;border-radius:8px;background:#F0E9DF;display:flex;align-items:center;justify-content:center;font-size:22px;overflow:hidden;flex:none}
   .cthumb img{width:100%;height:100%;object-fit:cover}
+  .cinfo{flex:1 1 150px;min-width:150px}
+  .cname{font-weight:600;line-height:1.3;overflow-wrap:break-word}
+  .cmeta{font-size:11.5px;margin-top:2px}
+  .cact{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-left:auto}
   .qty{display:flex;align-items:center;gap:7px;flex:none}
   .qty button{width:26px;height:26px;border:1px solid var(--line2);background:#fff;border-radius:7px;cursor:pointer;font-size:16px;line-height:1}
   .qty span{min-width:18px;text-align:center;font-weight:700}
-  .clt{font-weight:700;font-size:13px;min-width:84px;text-align:right;flex:none}
-  .crm{border:0;background:none;color:var(--sale);font-size:20px;cursor:pointer;flex:none}
+  .clt{font-weight:700;font-size:13px;min-width:70px;text-align:right;flex:none}
+  .crm{border:0;background:none;color:var(--sale);font-size:20px;cursor:pointer;flex:none;line-height:1}
   .ctot{display:flex;justify-content:space-between;font-weight:800;font-size:17px;margin-top:12px;padding-top:12px;border-top:2px solid var(--ink)}
 
   /* ---------- MODAL / OVERLAY ---------- */
@@ -1472,9 +1476,9 @@ function openCart(){
     <h2 style="margin-bottom:12px;display:flex;align-items:center;gap:9px">${svgIcon('bag',20)} Giỏ hàng${ids.length?' ('+cartCount()+')':''}</h2>
     ${ids.length?`${ids.map(id=>{const p=prod(id),im=p.images&&p.images[0];return `<div class="crow" data-id="${id}">
         <div class="cthumb">${im?`<img src="${esc(im)}">`:`<span style="color:#C3B4A2;display:flex">${catIcon(prodCat(p),22)}</span>`}</div>
-        <div style="flex:1;min-width:0"><div style="font-weight:600">${esc(p.name)}</div><div class="muted" style="font-size:11.5px">${fmt(sellPrice(p))}${p.unit?' / '+esc(p.unit):''}${variantStr(id)?' · '+esc(variantStr(id)):''}</div></div>
-        <div class="qty"><button data-dec>−</button><span>${cart[id]}</span><button data-inc>+</button></div>
-        <div class="clt">${fmt(sellPrice(p)*cart[id])}</div><button class="crm" data-rm>×</button></div>`;}).join('')}
+        <div class="cinfo"><div class="cname">${esc(p.name)}</div><div class="muted cmeta">${fmt(sellPrice(p))}${p.unit?' / '+esc(p.unit):''}${variantStr(id)?' · '+esc(variantStr(id)):''}</div></div>
+        <div class="cact"><div class="qty"><button data-dec>−</button><span>${cart[id]}</span><button data-inc>+</button></div>
+        <div class="clt">${fmt(sellPrice(p)*cart[id])}</div><button class="crm" data-rm>×</button></div></div>`;}).join('')}
       <div class="ctot"><span>Tạm tính</span><span>${fmt(total)}</span></div>
       <h3 style="margin:22px 0 10px">Thông tin nhận hàng</h3>
       <div class="setrow"><label>Họ tên *</label><input id="o_name" value="${esc(buyer.name)}" placeholder="Nguyễn Văn A"></div>
