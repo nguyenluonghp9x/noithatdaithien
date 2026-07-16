@@ -21,6 +21,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nội Thất Đại Thiên</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -205,6 +206,15 @@
   .postot .r.grand span:last-child{color:var(--orange-d)}
   .postot .r.grand.remain span:last-child{color:var(--sale)}
   @media(max-width:760px){.bangrid{grid-template-columns:1fr}.pl-ctrl{grid-template-columns:1fr 1fr}}
+  /* Màn hình quét QR */
+  .scanov{position:fixed;inset:0;background:rgba(15,12,9,.9);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+  .scanbox{width:100%;max-width:420px;background:#17130f;border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .scanhead{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;color:#fff;font-size:15px}
+  .scanhead .x{background:rgba(255,255,255,.16);border:0;color:#fff;width:33px;height:33px;border-radius:50%;font-size:19px;cursor:pointer;line-height:1;flex:none}
+  .scanvidwrap{position:relative;background:#000;aspect-ratio:1/1;overflow:hidden}
+  .scanvidwrap video{width:100%;height:100%;object-fit:cover;display:block}
+  .scanframe{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:64%;aspect-ratio:1/1;border:3px solid rgba(255,255,255,.92);border-radius:14px;box-shadow:0 0 0 100vmax rgba(0,0,0,.4)}
+  .scanmsg{color:#fff;text-align:center;padding:14px 12px;font-weight:600;font-size:14px;min-height:20px}
   .stat{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
   .stat .c{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:13px 15px;box-shadow:var(--shadow)}
   .stat .c.accent{background:linear-gradient(135deg,var(--orange),var(--orange-d));color:#fff;border:0}
@@ -1755,7 +1765,46 @@ function posLineHTML(id){const p=prod(id),l=posCart[id];const low=l.qty>p.stock;
       <div class="pl-f"><label>Chiết khấu</label><input class="pl-disc" value="${esc(l.disc||'')}" placeholder="0 · 10% · 50000"></div>
       <div class="pl-f"><label>Thành tiền</label><div class="pl-lt" data-lt>${fmt(lineNet(id))}</div></div>
     </div></div>`;}
-function addPos(id){const p=prod(id);if(!p)return;if(posCart[id])posCart[id].qty++;else posCart[id]={qty:1,disc:''};renderBan();const inp=$('#bSearch');if(inp)inp.focus();}
+function addPos(id){const p=prod(id);if(!p)return;if(posCart[id])posCart[id].qty++;else posCart[id]={qty:1,disc:''};renderBan();if(!document.querySelector('.scanov')){const inp=$('#bSearch');if(inp)inp.focus();}}
+function prodFromQR(raw){let id='';raw=(raw||'').trim();
+  try{const u=new URL(raw);id=u.searchParams.get('p')||'';}catch(e){}
+  if(!id){const m=raw.match(/[?&]p=([^&]+)/);if(m)id=decodeURIComponent(m[1]);}
+  if(!id)id=raw; // mã trần = coi như id/sku
+  return prod(id)||products.find(x=>(x.sku||'').toLowerCase()===id.toLowerCase())||null;}
+async function openScanner(){
+  if(document.querySelector('.scanov'))return;
+  const ov=document.createElement('div');ov.className='scanov';
+  ov.innerHTML=`<div class="scanbox">
+    <div class="scanhead"><b>📷 Quét mã QR trên tem</b><button class="x" id="scanClose">×</button></div>
+    <div class="scanvidwrap"><video id="scanVid" playsinline muted></video><div class="scanframe"></div></div>
+    <div class="scanmsg" id="scanMsg">Đang mở camera…</div></div>`;
+  document.body.appendChild(ov);
+  const vid=ov.querySelector('#scanVid'),msg=ov.querySelector('#scanMsg');
+  let stream=null,raf=0,det=null,stop=false,lastCode='',lastAt=0;
+  const close=()=>{stop=true;if(raf)cancelAnimationFrame(raf);if(stream)stream.getTracks().forEach(t=>t.stop());ov.remove();};
+  ov.querySelector('#scanClose').onclick=close;
+  ov.onclick=e=>{if(e.target===ov)close();};
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}}});}
+  catch(e){msg.textContent='Không mở được camera. Hãy cấp quyền Camera cho trình duyệt rồi thử lại. ('+(e.name||e.message||'')+')';return;}
+  vid.srcObject=stream;try{await vid.play();}catch(e){}
+  msg.textContent='Đưa mã QR trên tem vào khung…';
+  if('BarcodeDetector' in window){try{det=new BarcodeDetector({formats:['qr_code']});}catch(e){}}
+  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const handle=(raw)=>{if(!raw)return;const now=Date.now();if(raw===lastCode&&now-lastAt<1500)return;lastCode=raw;lastAt=now;
+    const p=prodFromQR(raw);
+    if(p){addPos(p.id);msg.style.color='#8CF2A6';msg.textContent='✓ Đã thêm: '+p.name;
+      setTimeout(()=>{if(!stop){msg.style.color='';msg.textContent='Đưa mã QR tiếp theo vào khung…';}},1000);}
+    else{msg.style.color='#FF9E8A';msg.textContent='Mã này không phải sản phẩm của shop';
+      setTimeout(()=>{if(!stop){msg.style.color='';msg.textContent='Đưa mã QR trên tem vào khung…';}},1300);}};
+  const tick=async()=>{if(stop)return;
+    if(vid.readyState>=2){
+      if(det){try{const cs=await det.detect(vid);if(cs&&cs[0])handle(cs[0].rawValue);}catch(e){}}
+      else if(window.jsQR&&vid.videoWidth){canvas.width=vid.videoWidth;canvas.height=vid.videoHeight;ctx.drawImage(vid,0,0);
+        try{const img=ctx.getImageData(0,0,canvas.width,canvas.height);const c=jsQR(img.data,img.width,img.height);if(c)handle(c.data);}catch(e){}}
+    }
+    raf=requestAnimationFrame(tick);};
+  tick();
+}
 function bindPosSearch(){const inp=$('#bSearch'),sug=$('#bSug');if(!inp)return;
   const draw=()=>{const q=inp.value.trim().toLowerCase();
     if(!q){sug.classList.remove('show');sug.innerHTML='';return;}
@@ -1787,6 +1836,7 @@ function renderBan(){
         <input id="bSearch" placeholder="Gõ TÊN hoặc MÃ sản phẩm để thêm..." autocomplete="off">
         <div class="possug" id="bSug"></div>
       </div>
+      <button class="btn alt" id="bScan" style="width:100%;margin-top:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg> Quét mã QR trên tem</button>
       <div id="bLines" style="margin-top:14px">${ids.length?ids.map(posLineHTML).join(''):'<div class="empty" style="border:0">Chưa có sản phẩm.<br>Gõ tên hoặc mã ở ô trên để thêm vào đơn.</div>'}</div>
       ${ids.length?'<p class="hint" style="margin-top:8px">💡 Cột <b>Chiết khấu</b>: gõ số tiền (vd <b>50000</b>) hoặc phần trăm (vd <b>10%</b>) để giảm riêng dòng đó.</p>':''}
     </div>
@@ -1811,6 +1861,7 @@ function renderBan(){
       <p class="hint">Tạo phiếu bán, trừ tồn kho, in hóa đơn cho khách.</p>
     </div></div>`;
   bindPosSearch();bindPosInfo();bindPosLines();
+  const sc=$('#bScan');if(sc)sc.onclick=openScanner;
   $('#bDone').onclick=completeSale;
 }
 async function completeSale(){
