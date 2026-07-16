@@ -299,8 +299,8 @@
   .modal .x{position:absolute;top:13px;right:15px;border:0;background:rgba(255,255,255,.85);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.15)}
   /* trình xem sản phẩm 2 cột */
   .detail{display:grid;grid-template-columns:1.05fr 1fr}
-  .dgal{background:#F4EFE8;display:flex;flex-direction:column}
-  .dmain{flex:1;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#F4EFE8}
+  .dgal{background:#F4EFE8;display:flex;flex-direction:column;align-self:start}
+  .dmain{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#F4EFE8}
   .dmain img{width:100%;height:100%;object-fit:cover}
   .dthumbs{display:flex;gap:8px;padding:12px;flex-wrap:wrap;background:#fff;border-top:1px solid var(--line)}
   .dthumb{width:58px;height:58px;border:1px solid var(--line2);border-radius:8px;overflow:hidden;cursor:pointer;padding:0;background:#fff}
@@ -1373,7 +1373,7 @@ function productView(p,mode){
       ${mode==='page'?`<div class="muted" style="font-size:12.5px;margin-bottom:10px">${p.sku?'Mã: <b>'+esc(p.sku)+'</b>':''}${(window._sold&&window._sold[id])?(p.sku?' · ':'')+'Đã bán '+window._sold[id]:''}</div>`:''}
       ${prodBadges(p,{big:true})}
       <div class="pprice" id="dPrice" style="font-size:26px;margin:0 0 14px">${priceHTML(p)}</div>
-      ${(p.desc&&mode==='page')?`<p class="muted" style="margin:0 0 16px;line-height:1.7">${esc(p.desc)}</p>`:(p.desc?`<p class="muted" style="margin:0 0 16px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(p.desc)}</p>`:'')}
+      ${(p.desc&&mode!=='page')?`<p class="muted" style="margin:0 0 16px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(p.desc)}</p>`:''}
       ${colors.length?`<div class="vargroup"><label>Màu sắc: <b id="dColorName" style="color:var(--ink)">${esc(v.color)}</b></label>
         <div class="swcolorlist" id="dSw">${colors.map((c,i)=>`<button class="swrow${i===colIdx?' on':''}" data-c="${esc(c)}" data-i="${i}" title="${esc(c)}"><span class="chip" style="background:${colorHex(c)||'#d8cdbb'}"></span>${esc(c)}</button>`).join('')}</div></div>`:''}
       ${sizes.length?`<div class="vargroup"><label>Kích thước: <b id="dSizeName" style="color:var(--ink)">${esc(v.size)}</b></label>
