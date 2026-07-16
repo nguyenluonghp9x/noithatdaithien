@@ -647,10 +647,9 @@
   </div></div>
   <div class="shopnav" id="shopnav"><div class="in">
     <div class="navdrop" id="navProducts">
-      <button class="navbtn nb-main" id="navProdBtn">${''}Sản phẩm <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button class="navbtn nb-main" id="navProdBtn">Sản phẩm <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
       <div class="navmenu" id="navProdMenu"></div>
     </div>
-    <button class="navbtn" data-nav="all">Tất cả sản phẩm</button>
     <a class="navbtn" id="navShowroom" data-nav="showroom">Showroom</a>
     <div class="navright">
       <a class="navbtn nb-hot" id="navPhone" href="#">📞 <b></b></a>
@@ -1356,6 +1355,14 @@ function mapHTML(){
     <div class="mapframe"><iframe src="${esc(mapEmbed())}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Bản đồ ${esc(settings.shop)}"></iframe></div>
   </div>`;
 }
+async function loadViews(){
+  window._views=window._views||{};
+  if(!DB.supaOn||!DB.client())return;
+  try{const {data,error}=await DB.client().from('product_views').select('sku,views').order('views',{ascending:false}).limit(30);
+    if(error)throw error;const m={};(data||[]).forEach(r=>{if(r.sku)m[r.sku]=r.views;});window._views=m;
+  }catch(e){/* bảng chưa tạo -> bỏ qua, mục "Xem nhiều" sẽ ẩn */}
+}
+function bumpView(sku){if(sku&&DB.supaOn&&DB.client()){try{DB.client().rpc('bump_view',{p_sku:sku});}catch(e){}}}
 function renderShop(){
   applySEO(null);
   const c=catCounts();const sold=window._sold=soldMap();
@@ -1363,10 +1370,12 @@ function renderShop(){
   let html='';
   if(homepage){
     html+=heroHTML()+trustHTML();
-    const navCats=cats.filter(x=>(c[x]||0)>0);
-    if(navCats.length)html+=`<div class="catnav">`+navCats.map(x=>`<div class="catcard" data-cat="${esc(x)}"><div class="nm">${esc(x)}</div><div class="ct">${c[x]||0} sản phẩm</div></div>`).join('')+`</div>`;
+    if(homepage && !window._viewsLoaded){window._viewsLoaded=true;loadViews().then(()=>{if(area==='shop'&&!productPageId&&active==='__all'&&!search)renderShop();});}
+    const vmap=window._views||{};
+    const viewed=[...products].filter(p=>vmap[p.sku]).sort((a,b)=>(vmap[b.sku]||0)-(vmap[a.sku]||0)).slice(0,8);
     const deals=products.filter(p=>p.salePrice&&p.salePrice<p.price).slice(0,8);
     const best=[...products].filter(p=>sold[p.id]).sort((a,b)=>sold[b.id]-sold[a.id]).slice(0,8);
+    if(viewed.length)html+=secHTML('eye','Xem nhiều nhất',viewed);
     if(deals.length)html+=secHTML('tag','Giá siêu tốt',deals);
     if(best.length)html+=secHTML('flame','Bán chạy nhất',best);
   }
@@ -1501,6 +1510,7 @@ function goShop(){productPageId=null;try{history.pushState({},'', location.pathn
 let pgQty=1;
 function renderProductPage(id){
   const p=prod(id);if(!p){goShop();return;}
+  bumpView(p.sku);
   window._sold=soldMap();pgQty=1;
   const related=products.filter(x=>x.id!==id&&prodCats(x).some(c=>inCat(p,c))).slice(0,4);
   $('#view').innerHTML=`<div class="prodpage">
