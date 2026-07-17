@@ -1297,7 +1297,8 @@ function catIconName(c){const k=(c||'').toLowerCase();
   if(/văn phòng|làm việc/.test(k))return 'office';if(/bếp/.test(k))return 'kitchen';
   if(/nệm/.test(k))return 'bed';if(/tủ|kệ/.test(k))return 'cabinet';return 'chair';}
 function catIcon(c,size){return svgIcon(catIconName(c),size||30,1.5);}
-function soldMap(){const m={};vouchers.filter(v=>v.type==='ban'&&v.status!=='dat').forEach(v=>v.items.forEach(i=>{m[i.id]=(m[i.id]||0)+i.qty;}));return m;}
+function isSaleV(v){return v.type==='ban'&&v.status!=='dat'&&v.status!=='daban';} // phiếu bán thực sự (tính doanh thu)
+function soldMap(){const m={};vouchers.filter(isSaleV).forEach(v=>v.items.forEach(i=>{m[i.id]=(m[i.id]||0)+i.qty;}));return m;}
 
 function priceHTML(p){
   if(!settings.showPrice)return `<span class="now nodeal" style="font-size:15px;color:var(--muted)">Liên hệ báo giá</span>`;
@@ -1905,15 +1906,17 @@ async function completeSale(kind){
 }
 
 /* ====================== QUẢN TRỊ: ĐƠN HÀNG (đặt hàng / bán hàng) ====================== */
-const DH_ST={dat:['📋 Đơn đặt hàng','#B6791F','#FBF0DA'],xong:['✅ Đã bán / hoàn thành','#2E7D52','#E7F3EC']};
+const DH_ST={dat:['📋 Đơn đặt hàng','#B6791F','#FBF0DA'],daban:['📦 Đã lập phiếu bán','#7E5BEF','#EFEAFB'],xong:['✅ Phiếu bán hàng','#2E7D52','#E7F3EC']};
 let dhFilter='all';
-function dhStatus(v){return v.status==='dat'?'dat':'xong';}
-function dhCard(v){const st=DH_ST[dhStatus(v)],b=v.buyer||{},tel=(b.phone||'').replace(/[^\d+]/g,''),isDat=dhStatus(v)==='dat';
+function dhStatus(v){return v.status==='dat'?'dat':v.status==='daban'?'daban':'xong';}
+function dhCard(v){const s=dhStatus(v),st=DH_ST[s],b=v.buyer||{},tel=(b.phone||'').replace(/[^\d+]/g,'');
   return `<div class="card" style="margin-bottom:14px">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div><b style="font-size:15px">${esc(v.code)}</b> <span class="muted" style="font-size:12px">${new Date(v.date).toLocaleString('vi-VN')}${v.staff?' · '+esc(v.staff):''}</span></div>
       <span style="background:${st[2]};color:${st[1]};padding:3px 11px;border-radius:20px;font-size:11.5px;font-weight:700">${st[0]}</span>
     </div>
+    ${v.fromOrder?`<div style="background:var(--cream);border-left:3px solid var(--gold-d);padding:7px 11px;border-radius:6px;font-size:12.5px;margin-bottom:10px">📋 Phiếu bán từ <b>đơn đặt hàng ${esc(v.fromOrder)}</b> · đặt ngày <b>${esc(new Date(v.fromOrderDate).toLocaleDateString('vi-VN'))}</b></div>`:''}
+    ${s==='daban'&&v.saleCode?`<div style="background:#EFEAFB;border-left:3px solid #7E5BEF;padding:7px 11px;border-radius:6px;font-size:12.5px;margin-bottom:10px">✅ Đã lập phiếu bán <b>${esc(v.saleCode)}</b>${v.doneAt?' · ngày '+esc(new Date(v.doneAt).toLocaleDateString('vi-VN')):''}</div>`:''}
     <div class="row" style="gap:18px;flex-wrap:wrap;margin-bottom:10px">
       <div><div class="muted" style="font-size:11px">Khách</div><b>${esc(b.name||v.partner||'Khách lẻ')}</b></div>
       ${b.phone?`<div><div class="muted" style="font-size:11px">SĐT</div><a href="tel:${esc(tel)}"><b>${esc(b.phone)}</b></a></div>`:''}
@@ -1927,27 +1930,39 @@ function dhCard(v){const st=DH_ST[dhStatus(v)],b=v.buyer||{},tel=(b.phone||'').r
       <div><b style="font-size:16px;color:var(--orange-d)">Tổng: ${fmt(v.total)}</b>${v.deposit>0?`<span class="muted" style="font-size:12.5px"> · Cọc ${fmt(v.deposit)} · <b style="color:var(--sale)">Còn ${fmt(v.remain!=null?v.remain:v.total-v.deposit)}</b></span>`:''}${v.xuatCode?`<span class="muted" style="font-size:12px"> · PX: ${esc(v.xuatCode)}</span>`:''}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn sm alt" data-print="${v.id}">In</button>
-        ${isDat?`<button class="btn sm" data-done="${v.id}">✓ Hoàn thành &amp; xuất kho</button><button class="btn sm danger" data-del="${v.id}">Hủy đơn</button>`:''}
+        ${s==='dat'?`<button class="btn sm" data-done="${v.id}">✓ Hoàn thành → phiếu bán</button><button class="btn sm danger" data-del="${v.id}">Hủy đơn</button>`:''}
       </div>
     </div></div>`;}
 async function completeDatOrder(id){
-  const v=vouchers.find(x=>x.id===id);if(!v||v.status!=='dat')return;
-  const short=v.items.filter(i=>{const p=prod(i.id);return p&&i.qty>p.stock;});
+  const order=vouchers.find(x=>x.id===id);if(!order||order.status!=='dat')return;
+  const short=order.items.filter(i=>{const p=prod(i.id);return p&&i.qty>p.stock;});
   if(short.length){const msg=short.map(i=>{const p=prod(i.id);return i.name+' (còn '+(p?p.stock:0)+', cần '+i.qty+')';}).join('; ');
     if(!await uiConfirm('Tồn không đủ vài sản phẩm','Vẫn hoàn thành & xuất kho (tồn có thể âm)?\n'+msg))return;}
-  makeStockOut(v);v.status='xong';v.doneAt=new Date().toISOString();
-  await saveP();await saveV();toast('Đơn '+v.code+' đã hoàn thành · đã tạo phiếu xuất trừ kho');renderDonHang();
+  const now=new Date().toISOString();
+  // Tạo PHIẾU BÁN HÀNG riêng từ đơn đặt hàng
+  const sale=Object.assign({},order,{id:uid(),code:'XB'+Date.now().toString().slice(-7),status:'xong',
+    date:now,fromOrder:order.code,fromOrderDate:order.date,staff:(session.staff&&session.staff.name)||order.staff,
+    items:order.items.map(i=>Object.assign({},i))});
+  delete sale.saleCode;delete sale.doneAt;delete sale.xuatCode;
+  vouchers.unshift(sale);
+  makeStockOut(sale); // phiếu xuất trừ kho theo phiếu bán
+  // Đánh dấu đơn đặt hàng gốc đã chuyển thành phiếu bán
+  order.status='daban';order.saleCode=sale.code;order.doneAt=now;
+  await saveP();await saveV();
+  toast('Đã lập phiếu bán '+sale.code+' từ đơn đặt hàng '+order.code+' · đã trừ kho');
+  printVoucher(sale);renderDonHang();
 }
 function renderDonHang(){
   const all=vouchers.filter(v=>v.type==='ban');
-  const nDat=all.filter(v=>dhStatus(v)==='dat').length,nXong=all.filter(v=>dhStatus(v)==='xong').length;
+  const n=s=>all.filter(v=>dhStatus(v)===s).length;
   const list=all.filter(v=>dhFilter==='all'||dhStatus(v)===dhFilter);
   $('#view').innerHTML=`<h2>Đơn hàng (${all.length})</h2>
-    <p class="hint" style="margin:-6px 0 14px">Đơn tạo ở mục <b>Bán hàng</b>. <b>Đơn đặt hàng</b> (giao sau) chưa trừ kho — bấm <b>"Hoàn thành & xuất kho"</b> để chuyển thành đơn đã bán, hệ thống tự tạo phiếu xuất trừ kho.</p>
+    <p class="hint" style="margin:-6px 0 14px">Tạo ở mục <b>Bán hàng</b>. <b>Đơn đặt hàng</b> (giao sau) chưa trừ kho — bấm <b>"Hoàn thành → phiếu bán"</b> sẽ tạo <b>phiếu bán hàng riêng</b> (ghi rõ từ đơn đặt hàng ngày nào) + tự xuất kho.</p>
     <div class="filterbar">
       <button class="chip" data-f="all" aria-pressed="${dhFilter==='all'}">Tất cả (${all.length})</button>
-      <button class="chip" data-f="dat" aria-pressed="${dhFilter==='dat'}">📋 Đơn đặt hàng (${nDat})</button>
-      <button class="chip" data-f="xong" aria-pressed="${dhFilter==='xong'}">✅ Đã bán (${nXong})</button>
+      <button class="chip" data-f="dat" aria-pressed="${dhFilter==='dat'}">📋 Đơn đặt hàng chờ (${n('dat')})</button>
+      <button class="chip" data-f="daban" aria-pressed="${dhFilter==='daban'}">📦 Đã lập phiếu bán (${n('daban')})</button>
+      <button class="chip" data-f="xong" aria-pressed="${dhFilter==='xong'}">✅ Phiếu bán hàng (${n('xong')})</button>
     </div>
     ${list.length?list.map(dhCard).join(''):`<div class="empty">${all.length?'Không có đơn ở nhóm này.':'Chưa có đơn hàng nào. Tạo đơn ở mục Bán hàng.'}</div>`}`;
   $('#view').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{dhFilter=b.dataset.f;renderDonHang();});
@@ -2150,7 +2165,7 @@ async function savePhieu(type){
 let lsFilter='all';
 function renderBaocao(){
   const now=new Date(),today=now.toDateString(),ym=now.getFullYear()+'-'+now.getMonth();
-  const ban=vouchers.filter(v=>v.type==='ban'&&v.status!=='dat');
+  const ban=vouchers.filter(isSaleV);
   const revToday=ban.filter(v=>new Date(v.date).toDateString()===today).reduce((s,v)=>s+v.total,0);
   const revMonth=ban.filter(v=>{const d=new Date(v.date);return d.getFullYear()+'-'+d.getMonth()===ym;}).reduce((s,v)=>s+v.total,0);
   const profitMonth=ban.filter(v=>{const d=new Date(v.date);return d.getFullYear()+'-'+d.getMonth()===ym;})
@@ -2642,6 +2657,7 @@ function printVoucher(v){
     <div style="font-size:12px;color:#555">${esc(settings.address||'')}${settings.phone?' · ĐT: '+esc(settings.phone):''}</div></div>
     <h1 style="text-align:center;font-size:18px;margin:10px 0">${title}</h1>
     <div>Số: <b>${esc(v.code)}</b> · Ngày: ${new Date(v.date).toLocaleString('vi-VN')}</div>
+    ${v.fromOrder?`<div style="font-size:12.5px;color:#555">Từ đơn đặt hàng <b>${esc(v.fromOrder)}</b> · đặt ngày ${esc(new Date(v.fromOrderDate).toLocaleDateString('vi-VN'))}</div>`:''}
     ${v.type==='ban'?`<div>Khách hàng: <b>${esc((v.buyer&&v.buyer.name)||v.partner||'Khách lẻ')}</b>${(v.buyer&&v.buyer.phone)?' · ĐT: '+esc(v.buyer.phone):''}${v.pay?' · TT: '+esc(v.pay):''}</div>${(v.buyer&&v.buyer.address)?`<div>Địa chỉ: ${esc(v.buyer.address)}</div>`:''}${v.deliver?`<div>Hẹn ngày giao: <b>${esc(v.deliver.split('-').reverse().join('/'))}</b></div>`:''}`:`<div>${v.type==='nhap'?'Nhà cung cấp':'Lý do'}: ${esc(v.partner||'-')}${v.pay?' · TT: '+esc(v.pay):''}</div>`}
     <table style="margin-top:12px;width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;border-bottom:1px solid #999;padding:6px">Sản phẩm</th><th style="border-bottom:1px solid #999;padding:6px">Mã</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">SL</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">Đơn giá</th><th style="text-align:right;border-bottom:1px solid #999;padding:6px">Thành tiền</th></tr></thead><tbody>
     ${v.items.map(i=>`<tr><td style="padding:6px;border-bottom:1px solid #ddd">${esc(i.name)}</td><td style="padding:6px;border-bottom:1px solid #ddd">${esc(i.sku||'')}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${i.qty}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${fmt(i.price)}</td><td style="text-align:right;padding:6px;border-bottom:1px solid #ddd">${fmt(i.qty*i.price)}</td></tr>`).join('')}
