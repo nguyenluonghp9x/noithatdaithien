@@ -977,9 +977,24 @@ const saveStaff=()=>DB.set('dt:staff',staff);
 const saveCus=()=>DB.set('dt:customers',customers);
 /* ---- Danh bạ khách hàng: sửa ở đây thì mọi đơn cũ hiện theo thông tin mới ---- */
 function phoneKey(p){return (p||'').replace(/\D/g,'');}
-function findCust(phone){const k=phoneKey(phone);return k?customers.find(c=>phoneKey(c.phone)===k):null;}
-function resolveBuyer(b){b=b||{};const c=findCust(b.phone);
-  return {name:(c&&c.name)||b.name||'',phone:b.phone||(c&&c.phone)||'',address:(c&&c.address)||b.address||''};}
+function nameKey(n){return (n||'').trim().toLowerCase().replace(/\s+/g,' ');}
+// nhận diện khách: ưu tiên SĐT, không có thì theo TÊN
+function custKey(b){b=b||{};const p=phoneKey(b.phone);if(p)return 'p:'+p;const n=nameKey(b.name);return n?'n:'+n:'';}
+function findCustByKey(k){return k?customers.find(c=>custKey(c)===k)||null:null;}
+function findCust(phone){return findCustByKey('p:'+phoneKey(phone));}
+function resolveBuyer(b){b=b||{};const c=findCustByKey(custKey(b));
+  return {name:(c&&c.name)||b.name||'',phone:(c&&c.phone)||b.phone||'',address:(c&&c.address)||b.address||''};}
+// ghi thông tin khách mới vào TẤT CẢ đơn cũ của khách đó (giữ liên kết khi đổi SĐT)
+async function applyCustomerToOrders(oldKey,cust){
+  if(!oldKey)return;const list=await loadAllOrders();let touched=false;
+  for(const no of list){
+    if(custKey(no.buyer)!==oldKey)continue;
+    const nb=Object.assign({},no.buyer,{name:cust.name,phone:cust.phone,address:cust.address});
+    if(no.store==='online'){try{await DB.client().from('orders').update({buyer:nb}).eq('id',no.id);}catch(e){}}
+    else{no.raw.buyer=nb;touched=true;}
+  }
+  if(touched)await saveV();
+}
 const saveSet=()=>DB.set('dt:settings',settings);
 const saveCart=()=>DB.set('dt:cart',cart);
 const saveCartVar=()=>DB.set('dt:cartvar',cartVariant);
@@ -1734,6 +1749,7 @@ async function saveOrderPatch(no,patch){
   Object.assign(no.raw,patch);
   if(no.store==='online'){
     const dbp={};if(patch.status!=null)dbp.status=patch.status;if(patch.buyer!=null)dbp.buyer=patch.buyer;
+    if(patch.items!=null)dbp.items=patch.items;if(patch.total!=null)dbp.total=patch.total;
     if(Object.keys(dbp).length){try{await DB.client().from('orders').update(dbp).eq('id',no.id);}catch(e){toast('Lỗi lưu đơn online: '+(e.message||e));}}
   }
   else{ await saveV(); }
@@ -1773,7 +1789,7 @@ function orderCard(no){const st=ORDER_ST[no.status]||ORDER_ST.cho,b=resolveBuyer
       <span style="background:${st[2]};color:${st[1]};padding:3px 11px;border-radius:20px;font-size:11.5px;font-weight:700">${st[0]}</span>
     </div>
     <div class="row" style="gap:18px;flex-wrap:wrap;margin-bottom:10px">
-      <div><div class="muted" style="font-size:11px">Khách</div><b>${esc(b.name||no.raw.partner||'Khách lẻ')}</b></div>
+      <div><div class="muted" style="font-size:11px">Khách</div><a data-gocust="${esc(custKey(no.buyer))}" title="Xem thẻ khách hàng" style="color:var(--orange-d);cursor:pointer;text-decoration:underline"><b>${esc(b.name||no.raw.partner||'Khách lẻ')}</b></a></div>
       ${b.phone?`<div><div class="muted" style="font-size:11px">SĐT</div><a href="tel:${esc(tel)}"><b>${esc(b.phone)}</b></a></div>`:''}
       ${b.address?`<div style="flex:1;min-width:150px"><div class="muted" style="font-size:11px">Địa chỉ</div>${esc(b.address)}</div>`:''}
       ${no.deliver?`<div><div class="muted" style="font-size:11px">Hẹn giao</div><b>${esc(new Date(no.deliver).toLocaleDateString('vi-VN'))}</b></div>`:''}
@@ -1831,34 +1847,117 @@ async function renderDon(){
   $('#view').querySelectorAll('[data-print]').forEach(b=>b.onclick=()=>printOrder(b.dataset.print));
   $('#view').querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>copyOrder(b.dataset.copy));
   $('#view').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editOrder(b.dataset.edit));
+  $('#view').querySelectorAll('[data-gocust]').forEach(b=>b.onclick=()=>gotoCustomer(b.dataset.gocust));
   if(donFocus){const el=$('#view').querySelector('[data-code="'+donFocus.replace(/"/g,'')+'"]');
     if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.boxShadow='0 0 0 3px var(--orange)';setTimeout(()=>{el.style.boxShadow='';},2600);}
     donFocus='';}
 }
-/* ---- Sửa đơn đã lên: thông tin khách, hẹn giao, địa chỉ ---- */
+/* ---- Sửa đơn đã lên: khách, hẹn giao, địa chỉ, SẢN PHẨM (đổi/trả), cọc, giảm giá ---- */
+let eoNo=null, eoLines=[], eoDisc=0, eoDeposit=0;
+function eoLineNet(l){return Math.max(0,l.price*l.qty-lineDiscAmt(l.price,l.qty,l.disc));}
+function eoSub(){return eoLines.reduce((s,l)=>s+l.price*l.qty,0);}
+function eoLineDiscTotal(){return eoLines.reduce((s,l)=>s+(l.price*l.qty-eoLineNet(l)),0);}
+function eoAfter(){return eoLines.reduce((s,l)=>s+eoLineNet(l),0);}
+function eoTotal(){return Math.max(0,eoAfter()-(+eoDisc||0));}
+function eoRemain(){return Math.max(0,eoTotal()-(+eoDeposit||0));}
 function editOrder(id){
-  const no=donAll.find(o=>o.id===id);if(!no)return;const b=resolveBuyer(no.buyer);
+  const no=donAll.find(o=>o.id===id);if(!no)return;
+  eoNo=no;
+  eoLines=(no.items||[]).map(i=>({id:i.id,sku:i.sku,name:i.name,price:(i.listPrice!=null?i.listPrice:i.price)||0,qty:+i.qty||1,disc:(i.disc?String(i.disc):'')}));
+  eoDisc=+(no.raw.discount||0);eoDeposit=+(no.deposit||0);
+  eoRender();$('#ov').classList.add('show');
+  const m=document.querySelector('#ov .modal');if(m)m.classList.add('wide');
+}
+function eoLineHTML(l,i){return `<div class="posline" data-i="${i}">
+  <div class="pl-top"><div class="pl-name"><b>${esc(l.name)}</b> <span class="muted">${esc(l.sku||'—')}</span></div>
+    <button class="x" data-eox="${i}" title="Bỏ khỏi đơn">×</button></div>
+  <div class="pl-ctrl">
+    <div class="pl-f"><label>Đơn giá</label><div class="pl-price">${fmt(l.price)}</div></div>
+    <div class="pl-f"><label>SL</label><input class="eo-qty" inputmode="numeric" value="${l.qty}"></div>
+    <div class="pl-f"><label>Chiết khấu</label><input class="eo-disc" value="${esc(l.disc||'')}" placeholder="0 · 10% · 50000"></div>
+    <div class="pl-f"><label>Thành tiền</label><div class="pl-lt">${fmt(eoLineNet(l))}</div></div>
+  </div></div>`;}
+function eoRender(){
+  const no=eoNo,b=resolveBuyer(no.buyer);
   $('#ovContent').innerHTML=`<div class="mbody"><h2 style="margin-bottom:4px">Sửa đơn ${esc(no.code)}</h2>
-    <p class="hint" style="margin:0 0 12px">Sửa thông tin khách sẽ cập nhật cả <b>danh bạ khách hàng</b> (mọi đơn của khách này đổi theo).</p>
+    <p class="hint" style="margin:0 0 12px">${no.stockDone?'<b>Đơn đã trừ kho</b> — thêm/bớt hàng sẽ tự tạo phiếu xuất/nhập bù cho đúng tồn.':'Đơn chưa trừ kho.'} Sửa thông tin khách sẽ cập nhật cả danh bạ.</p>
     <div class="setrow"><label>Tên khách</label><input id="eoName" value="${esc(b.name)}"></div>
     <div class="row"><div class="setrow" style="flex:1"><label>Số điện thoại</label><input id="eoPhone" value="${esc(b.phone)}" inputmode="tel"></div>
       <div class="setrow" style="flex:1"><label>Hẹn ngày giao</label><input id="eoDeliver" type="date" value="${esc(no.deliver||'')}"></div></div>
     <div class="setrow"><label>Địa chỉ giao hàng</label><input id="eoAddr" value="${esc(b.address)}"></div>
-    <div class="setrow"><label>Ghi chú</label><textarea id="eoNote" rows="2">${esc(no.note||'')}</textarea></div>
-    <button class="btn" id="eoSave">Lưu thay đổi</button></div>`;
-  $('#ov').classList.add('show');
-  $('#eoSave').onclick=async()=>{
-    const name=$('#eoName').value.trim(),phone=$('#eoPhone').value.trim(),address=$('#eoAddr').value.trim(),
-          deliver=$('#eoDeliver').value,note=$('#eoNote').value.trim();
-    const nb={name,phone,address};
-    if(no.store==='online'){nb.note=note;nb.deliver=deliver;await saveOrderPatch(no,{buyer:nb});}
-    else{await saveOrderPatch(no,{buyer:nb,deliver,note});}
-    if(phone){let reg=findCust(phone);
-      if(reg)Object.assign(reg,{name:name||reg.name,address:address||reg.address});
-      else customers.push({id:uid(),name,phone,address,note:''});
-      await saveCus();}
-    closeOv();toast('Đã cập nhật đơn '+no.code);renderDon();
-  };
+    <div class="setrow"><label>Ghi chú</label><input id="eoNote" value="${esc(no.note||'')}"></div>
+    <h3 style="margin:16px 0 8px;font-size:15px">Sản phẩm trong đơn</h3>
+    <div class="possearch"><span class="ps-ic">${svgIcon('search',18)}</span><input id="eoSearch" placeholder="Gõ tên/mã để THÊM sản phẩm..." autocomplete="off"><div class="possug" id="eoSug"></div></div>
+    <div id="eoLinesBox" style="margin-top:12px">${eoLines.length?eoLines.map(eoLineHTML).join(''):'<div class="empty" style="border:0">Đơn chưa có sản phẩm nào.</div>'}</div>
+    <div class="row" style="margin-top:12px"><div class="setrow" style="flex:1"><label>Giảm giá cả đơn (đ)</label><input id="eoDiscI" inputmode="numeric" value="${eoDisc||''}" placeholder="0"></div>
+      <div class="setrow" style="flex:1"><label>Đặt cọc (đ)</label><input id="eoDepI" inputmode="numeric" value="${eoDeposit||''}" placeholder="0"></div></div>
+    <div class="postot">
+      <div class="r"><span>Tạm tính</span><span>${fmt(eoSub())}</span></div>
+      <div class="r"><span>Chiết khấu sản phẩm</span><span>-${fmt(eoLineDiscTotal())}</span></div>
+      <div class="r"><span>Giảm giá cả đơn</span><span>-${fmt(+eoDisc||0)}</span></div>
+      <div class="r grand"><span>TỔNG TIỀN</span><span>${fmt(eoTotal())}</span></div>
+      <div class="r"><span>Đặt cọc</span><span>-${fmt(+eoDeposit||0)}</span></div>
+      <div class="r grand remain"><span>CÒN PHẢI THU</span><span>${fmt(eoRemain())}</span></div>
+    </div>
+    <button class="btn" id="eoSave" style="margin-top:12px">Lưu thay đổi</button></div>`;
+  bindEo();
+}
+function eoAdd(pid){const p=prod(pid);if(!p)return;const ex=eoLines.find(l=>l.id===pid);
+  if(ex)ex.qty++;else eoLines.push({id:p.id,sku:p.sku,name:p.name,price:sellPrice(p),qty:1,disc:''});
+  eoRender();const i=$('#eoSearch');if(i)i.focus();}
+function bindEo(){
+  const inp=$('#eoSearch'),sug=$('#eoSug');
+  if(inp){const draw=()=>{const q=inp.value.trim().toLowerCase();
+      if(!q){sug.classList.remove('show');sug.innerHTML='';return;}
+      const list=products.filter(p=>(p.name+' '+(p.sku||'')).toLowerCase().includes(q)).slice(0,8);
+      sug.innerHTML=list.length?list.map(p=>`<div class="sug-it" data-add="${p.id}"><div style="min-width:0"><b>${esc(p.name)}</b><div class="muted" style="font-size:12px">${esc(p.sku||'—')} · tồn ${p.stock}</div></div><div class="num" style="white-space:nowrap">${fmt(sellPrice(p))}</div></div>`).join(''):'<div class="sug-it" style="color:var(--muted);cursor:default">Không tìm thấy</div>';
+      sug.classList.add('show');
+      sug.querySelectorAll('[data-add]').forEach(it=>it.onmousedown=e=>{e.preventDefault();eoAdd(it.dataset.add);});};
+    inp.oninput=draw;inp.onfocus=draw;inp.onblur=()=>setTimeout(()=>{if(sug)sug.classList.remove('show');},160);}
+  $('#ovContent').querySelectorAll('.posline').forEach(row=>{const i=+row.dataset.i;
+    const qt=row.querySelector('.eo-qty'),dc=row.querySelector('.eo-disc');
+    if(qt)qt.onchange=()=>{eoLines[i].qty=Math.max(1,num(qt.value));eoRender();};
+    if(dc)dc.onchange=()=>{eoLines[i].disc=dc.value;eoRender();};});
+  $('#ovContent').querySelectorAll('[data-eox]').forEach(b=>b.onclick=()=>{eoLines.splice(+b.dataset.eox,1);eoRender();});
+  const d=$('#eoDiscI');if(d)d.onchange=()=>{eoDisc=Math.max(0,num(d.value));eoRender();};
+  const dp=$('#eoDepI');if(dp)dp.onchange=()=>{eoDeposit=Math.max(0,num(dp.value));eoRender();};
+  const s=$('#eoSave');if(s)s.onclick=eoSave;
+}
+async function eoSave(){
+  const no=eoNo;if(!no)return;
+  if(!eoLines.length){toast('Đơn phải có ít nhất 1 sản phẩm');return;}
+  const name=$('#eoName').value.trim(),phone=$('#eoPhone').value.trim(),address=$('#eoAddr').value.trim(),
+        deliver=$('#eoDeliver').value,note=$('#eoNote').value.trim();
+  const newItems=eoLines.map(l=>{const net=eoLineNet(l),eff=l.qty?Math.round(net/l.qty):l.price,p=prod(l.id)||{};
+    return{id:l.id,sku:l.sku,name:l.name,qty:l.qty,price:eff,listPrice:l.price,disc:l.price*l.qty-net,cost:p.cost};});
+  const sub=eoSub(),lineD=eoLineDiscTotal(),after=eoAfter();
+  const disc=Math.max(0,Math.min(after,+eoDisc||0));
+  const total=after-disc, deposit=Math.max(0,Math.min(total,+eoDeposit||0));
+  // Đơn đã trừ kho -> điều chỉnh chênh lệch (đổi/trả hàng)
+  if(no.stockDone){
+    const oldQ={},newQ={};
+    (no.items||[]).forEach(i=>oldQ[i.id]=(oldQ[i.id]||0)+(+i.qty||0));
+    newItems.forEach(i=>newQ[i.id]=(newQ[i.id]||0)+(+i.qty||0));
+    const outs=[],ins=[];
+    Object.keys(Object.assign({},oldQ,newQ)).forEach(pid=>{const d=(newQ[pid]||0)-(oldQ[pid]||0);const p=prod(pid);
+      if(!d||!p)return;const it={id:pid,sku:p.sku,name:p.name,qty:Math.abs(d),cost:p.cost};
+      if(d>0)outs.push(it);else ins.push(it);});
+    if(ins.length)makeStockIn(no.code+' (khách trả/bớt)',ins);
+    if(outs.length)makeStockOut(no.code+' (giao thêm)',outs);
+    if(ins.length||outs.length)await saveP();
+  }
+  const nb={name,phone,address};
+  if(no.store==='online'){nb.note=note;nb.deliver=deliver;
+    await saveOrderPatch(no,{buyer:nb,items:newItems,total});
+    Object.assign(no.raw,{subtotal:sub,lineDisc:lineD,discount:disc,deposit,remain:total-deposit,paid:deposit>=total});
+  } else {
+    await saveOrderPatch(no,{buyer:nb,deliver,note,items:newItems,subtotal:sub,lineDisc:lineD,discount:disc,deposit,remain:total-deposit,paid:deposit>=total,total});
+  }
+  if(phone||name){const k=custKey({name,phone});let reg=findCustByKey(k);
+    if(reg)Object.assign(reg,{name:name||reg.name,phone:phone||reg.phone,address:address||reg.address});
+    else customers.push({id:uid(),name,phone,address,note:''});
+    await saveCus();}
+  closeOv();toast('Đã cập nhật đơn '+no.code);renderDon();
 }
 
 /* ====================== QUẢN TRỊ: BÁN HÀNG ====================== */
@@ -2026,19 +2125,20 @@ async function completeSale(kind){
 let khachSearch='', khachOpen='', khachAll=[];
 function buildCustomers(list){
   const map={};
-  list.forEach(o=>{const b=o.buyer||{};const k=phoneKey(b.phone);if(!k)return;
-    if(!map[k])map[k]={key:k,phone:b.phone,name:b.name||'',address:b.address||'',note:'',orders:[],spend:0,debt:0,last:o.date};
+  list.forEach(o=>{const b=o.buyer||{};const k=custKey(b);if(!k)return;
+    if(!map[k])map[k]={key:k,phone:b.phone||'',name:b.name||'',address:b.address||'',note:'',orders:[],spend:0,debt:0,last:o.date};
     const c=map[k];c.orders.push(o);
     if(!c.last||new Date(o.date)>=new Date(c.last)){c.last=o.date;if(b.name)c.name=b.name;if(b.address)c.address=b.address;}
     if(o.status==='xong')c.spend+=o.total;
     if(o.status!=='huy'&&o.remain>0)c.debt+=o.remain;});
-  Object.values(map).forEach(c=>{const reg=customers.find(x=>phoneKey(x.phone)===c.key);
-    if(reg){if(reg.name)c.name=reg.name;if(reg.address)c.address=reg.address;c.note=reg.note||'';}});
-  customers.forEach(reg=>{const k=phoneKey(reg.phone);
-    if(k&&!map[k])map[k]={key:k,phone:reg.phone,name:reg.name||'',address:reg.address||'',note:reg.note||'',orders:[],spend:0,debt:0,last:null};});
+  Object.values(map).forEach(c=>{const reg=findCustByKey(c.key);
+    if(reg){if(reg.name)c.name=reg.name;if(reg.phone)c.phone=reg.phone;if(reg.address)c.address=reg.address;c.note=reg.note||'';}});
+  customers.forEach(reg=>{const k=custKey(reg);
+    if(k&&!map[k])map[k]={key:k,phone:reg.phone||'',name:reg.name||'',address:reg.address||'',note:reg.note||'',orders:[],spend:0,debt:0,last:null};});
   return Object.values(map).sort((a,b)=>b.spend-a.spend);
 }
 function gotoOrder(code){donFocus=code;donSrc='all';donSt='all';tab='don';renderTabs();renderView();}
+function gotoCustomer(key){khachOpen=key||'';khachSearch='';tab='khach';renderTabs();renderView();window.scrollTo({top:0,behavior:'smooth'});}
 function khachRow(c){const open=khachOpen===c.key;
   return `<div class="khrow">
     <div class="kh-main">
@@ -2067,18 +2167,21 @@ function editCustomer(key){
   $('#ovContent').innerHTML=`<div class="mbody"><h2 style="margin-bottom:4px">${key?'Sửa khách hàng':'Thêm khách hàng'}</h2>
     <p class="hint" style="margin:0 0 12px">Sửa xong, <b>mọi đơn hàng của khách này</b> sẽ hiển thị theo thông tin mới.</p>
     <div class="setrow"><label>Tên khách</label><input id="cuName" value="${esc(c.name||'')}" placeholder="Nguyễn Văn A"></div>
-    <div class="setrow"><label>Số điện thoại *</label><input id="cuPhone" value="${esc(c.phone||'')}" inputmode="tel" placeholder="09xx xxx xxx"></div>
+    <div class="setrow"><label>Số điện thoại</label><input id="cuPhone" value="${esc(c.phone||'')}" inputmode="tel" placeholder="09xx xxx xxx"></div>
     <div class="setrow"><label>Địa chỉ</label><input id="cuAddr" value="${esc(c.address||'')}" placeholder="Số nhà, đường, phường..."></div>
     <div class="setrow"><label>Ghi chú</label><textarea id="cuNote" rows="2">${esc(c.note||'')}</textarea></div>
     <button class="btn" id="cuSave">Lưu</button></div>`;
   $('#ov').classList.add('show');
   $('#cuSave').onclick=async()=>{
     const name=$('#cuName').value.trim(),phone=$('#cuPhone').value.trim(),address=$('#cuAddr').value.trim(),note=$('#cuNote').value.trim();
-    if(!phone){toast('Cần số điện thoại (dùng để nhận diện khách)');return;}
-    let reg=(c.phone&&findCust(c.phone))||findCust(phone);
+    if(!phone&&!name){toast('Cần ít nhất Tên hoặc Số điện thoại');return;}
+    const oldKey=c.key||custKey({name:c.name,phone:c.phone});
+    let reg=findCustByKey(oldKey)||findCustByKey(custKey({name,phone}));
     if(reg)Object.assign(reg,{name,phone,address,note});
-    else customers.push({id:uid(),name,phone,address,note});
-    await saveCus();closeOv();toast('Đã lưu khách hàng');renderKhach();};
+    else{reg={id:uid(),name,phone,address,note};customers.push(reg);}
+    await saveCus();
+    await applyCustomerToOrders(oldKey,reg); // ghi vào các đơn cũ để giữ liên kết
+    closeOv();toast('Đã lưu khách · đã cập nhật các đơn cũ');renderKhach();};
 }
 async function renderKhach(){
   if($('#view'))$('#view').innerHTML='<h2>Khách hàng</h2><p class="muted">Đang tải…</p>';
