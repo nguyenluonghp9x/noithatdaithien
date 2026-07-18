@@ -1679,11 +1679,12 @@ function pendCount(){
 // chuẩn hóa 1 đơn (online = row cloud, quay = voucher ban) về cùng 1 dạng
 function normOrder(store,o){
   const tot=+o.total||0,dep=+o.deposit||0;
-  let st=o.status||'cho'; if(st==='dat')st='cho'; // map cũ
+  // đơn quầy (voucher bán) cũ KHÔNG có trạng thái = đã bán xong (đã trừ kho); đơn online mới = chờ xác nhận
+  let st=o.status||(store==='online'?'cho':'xong'); if(st==='dat')st='cho';
   return {store,src:store,id:o.id,code:o.code,date:o.date||o.created_at,status:st,
     buyer:o.buyer||{},items:o.items||[],total:tot,deposit:dep,remain:(o.remain!=null?o.remain:tot-dep),
     deliver:o.deliver||'',note:o.note||(o.buyer&&o.buyer.note)||'',paid:!!o.paid,xuatCode:o.xuatCode||'',
-    stockDone:(st==='xong'),raw:o};
+    stockDone:(o.stockDone!=null?!!o.stockDone:(st==='xong')),raw:o};
 }
 async function loadAllOrders(){
   await loadCloudOrders();
@@ -1721,13 +1722,15 @@ async function orderComplete(id){const no=donAll.find(o=>o.id===id);if(!no||no.s
   const short=no.items.filter(i=>{const p=prod(i.id);return p&&i.qty>p.stock;});
   if(short.length){const msg=short.map(i=>{const p=prod(i.id);return i.name+' (còn '+(p?p.stock:0)+', cần '+i.qty+')';}).join('; ');
     if(!await uiConfirm('Tồn không đủ','Vẫn hoàn thành & xuất kho (tồn có thể âm)?\n'+msg))return;}
+  if(no.stockDone){if(!await uiConfirm('Đơn này đã trừ kho rồi','Vẫn hoàn thành nhưng KHÔNG trừ kho lần nữa?'))return;
+    await saveOrderPatch(no,{status:'xong'});await saveV();toast('Đã đánh dấu hoàn thành (không trừ kho lại)');renderDon();return;}
   const xv=makeStockOut(no.code,no.items);await saveP();
-  await saveOrderPatch(no,{status:'xong',xuatCode:xv.code});await saveV();
+  await saveOrderPatch(no,{status:'xong',xuatCode:xv.code,stockDone:true});await saveV();
   toast('Hoàn thành đơn '+no.code+' · đã xuất kho trừ tồn');renderDon();}
 async function orderCancel(id){const no=donAll.find(o=>o.id===id);if(!no||no.status==='huy')return;
   if(!await uiConfirm('Hủy đơn '+no.code+'?',no.stockDone?'Đơn đã trừ kho — hệ thống sẽ tự cộng hoàn lại kho.':'Đơn chưa trừ kho, hủy an toàn.'))return;
   if(no.stockDone){makeStockIn(no.code,no.items);await saveP();}
-  await saveOrderPatch(no,{status:'huy'});await saveV();
+  await saveOrderPatch(no,{status:'huy',stockDone:false});await saveV();
   toast('Đã hủy đơn '+no.code+(no.stockDone?' · đã hoàn kho':''));renderDon();}
 async function orderPayFull(id){const no=donAll.find(o=>o.id===id);if(!no)return;
   await saveOrderPatch(no,{deposit:no.total,remain:0,paid:true});await saveV();toast('Đơn '+no.code+': đã thu đủ');renderDon();}
@@ -1957,7 +1960,7 @@ async function completeSale(kind){
   const v={id:uid(),code:(kind==='dat'?'DH':'XB')+Date.now().toString().slice(-7),type:'ban',status:kind==='dat'?'cho':'xong',src:'quay',date:new Date().toISOString(),
     partner:cus||'Khách lẻ',pay:posInfo.pay,note:posInfo.note,
     buyer:{name:posInfo.name.trim(),phone:posInfo.phone.trim(),address:posInfo.addr.trim()},deliver:posInfo.deliver,
-    subtotal:sub,lineDisc:lineD,discount:orderDisc,deposit,remain:total-deposit,paid:deposit>=total,items,total,staff:session.staff.name};
+    subtotal:sub,lineDisc:lineD,discount:orderDisc,deposit,remain:total-deposit,paid:deposit>=total,stockDone:(kind==='ban'),items,total,staff:session.staff.name};
   vouchers.unshift(v);
   if(kind==='ban'){const xv=makeStockOut(v.code,v.items);v.xuatCode=xv.code;} // bán ngay -> xuất kho tự động
   await saveP();await saveV();
