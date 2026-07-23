@@ -953,21 +953,20 @@ function onRemoteChange(){
   },350);
 }
 async function load(){
-  products=await DB.get('dt:products');
-  if(!products){products=SAMPLE;cats=SAMPLE_CATS;await DB.set('dt:products',products);await DB.set('dt:cats',cats);}
-  else cats=await DB.get('dt:cats')||[];
-  vouchers=await DB.get('dt:vouchers')||[];
-  orders=await DB.get('dt:orders')||[];
-  staff=await DB.get('dt:staff')||[];
-  customers=await DB.get('dt:customers')||[];
-  applySettings(await DB.get('dt:settings'));
-  // Tài khoản dùng Supabase Auth (email+mật khẩu). Chủ tự tạo ở màn hình đăng nhập lần đầu.
-  await restoreSession();
-  cart=await DB.get('dt:cart')||{};
-  cartVariant=await DB.get('dt:cartvar')||{};
-  buyer=Object.assign({name:'',phone:'',address:'',note:''},await DB.get('dt:buyer')||{});
+  // Tải SONG SONG tất cả (nhanh hơn nhiều so với tuần tự)
+  const [prods,cts,vs,os,st,cu,setg,ct,cv,by]=await Promise.all([
+    DB.get('dt:products'),DB.get('dt:cats'),DB.get('dt:vouchers'),DB.get('dt:orders'),
+    DB.get('dt:staff'),DB.get('dt:customers'),DB.get('dt:settings'),
+    DB.get('dt:cart'),DB.get('dt:cartvar'),DB.get('dt:buyer')]);
+  if(!prods){products=SAMPLE;cats=SAMPLE_CATS;await DB.set('dt:products',products);await DB.set('dt:cats',cats);}
+  else{products=prods;cats=cts||[];}
+  vouchers=vs||[];orders=os||[];staff=st||[];customers=cu||[];
+  applySettings(setg);
+  cart=ct||{};cartVariant=cv||{};buyer=Object.assign({name:'',phone:'',address:'',note:''},by||{});
   // bổ sung danh mục từ sản phẩm
   products.forEach(p=>prodCats(p).forEach(c=>{if(c&&!cats.includes(c))cats.push(c);}));
+  // Tài khoản dùng Supabase Auth (email+mật khẩu). Chủ tự tạo ở màn hình đăng nhập lần đầu.
+  await restoreSession();
 }
 const saveP=()=>DB.set('dt:products',products);
 const saveCats=()=>DB.set('dt:cats',cats);
@@ -1357,7 +1356,7 @@ function shopCard(p){
   const pct=hasSale?Math.round((1-p.salePrice/p.price)*100):0;
   const sold=(window._sold&&window._sold[p.id])||0;
   return `<div class="pcard" data-id="${p.id}">
-    <div class="thumb" data-detail>${img?`<img src="${esc(img)}" alt="${esc(p.name)}">`:catIcon(prodCat(p),52)}
+    <div class="thumb" data-detail>${img?`<img src="${esc(img)}" alt="${esc(p.name)}" loading="lazy" decoding="async">`:catIcon(prodCat(p),52)}
       ${hasSale?`<span class="disc">-${pct}%</span>`:''}${!st.avail?'<span class="soldout">Hết hàng</span>':''}
       <div class="hoverbtns">
         <button class="hb" data-quick>${svgIcon('eye',15)} Xem nhanh</button>
