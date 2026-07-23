@@ -2282,10 +2282,10 @@ function renderKho(){
       <div class="sectitle"><h3 style="margin:0">Danh sách (${products.length}) · Giá trị tồn: ${fmt(stockVal)}</h3>
         <div style="display:flex;gap:8px;align-items:center"><button class="btn sm alt" id="kImport" title="Nhập nhiều sản phẩm từ file .json (gộp theo mã SP)">⬆ Nhập sản phẩm</button>
         <input id="kSearch" placeholder="Tìm trong kho..." style="max-width:200px" value="${esc(khoSearch)}"></div></div>
-      <table><thead><tr><th>Mã</th><th>Tên</th><th>Danh mục</th><th class="num">Tồn</th>${showCost?'<th class="num">Giá vốn</th>':''}<th class="num">Giá bán</th><th></th></tr></thead><tbody>
+      <table><thead><tr><th>Mã</th><th>Tên</th><th>Danh mục</th><th class="num">Tồn</th>${showCost?'<th class="num">Giá vốn</th>':''}<th class="num">Giá niêm yết</th><th></th></tr></thead><tbody>
       ${list.map(p=>`<tr class="${p.stock<=p.min?'low':''}"><td>${esc(p.sku||'—')}</td><td>${esc(p.name)}</td><td>${esc(prodCats(p).join(', ')||'—')}</td>
         <td class="num">${p.stock} ${esc(p.unit||'')}</td>${showCost?`<td class="num">${fmt(p.cost)}</td>`:''}
-        <td class="num">${fmt(sellPrice(p))}</td>
+        <td class="num"><b>${fmt(p.price)}</b>${(p.salePrice&&p.salePrice<p.price)?`<div class="muted" style="font-size:11.5px">KM: ${fmt(p.salePrice)}</div>`:''}</td>
         <td class="right"><button class="btn sm alt" data-edit="${p.id}">Sửa</button> ${can('delete_products')?`<button class="btn sm danger" data-del="${p.id}">Xóa</button>`:''}</td></tr>`).join('')}
       </tbody></table>${list.length?'':'<div class="empty">Không có sản phẩm.</div>'}</div>`;
   // ảnh tạm cho form
