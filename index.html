@@ -1337,9 +1337,10 @@ function priceHTML(p){
   if(!settings.showPrice)return `<span class="now nodeal" style="font-size:15px;color:var(--muted)">Liên hệ báo giá</span>`;
   if(hasVariants(p)){
     const vs=varPriced(p),prices=vs.map(varSell),mn=Math.min(...prices),mx=Math.max(...prices);
-    const anySale=vs.some(v=>v.sale&&+v.sale<+v.price);
+    const cheapest=vs.reduce((a,b)=>varSell(b)<varSell(a)?b:a);
+    const hasSale=cheapest.sale&&+cheapest.sale<+cheapest.price;
     const from=mn!==mx?`<span class="pfrom">từ </span>`:'';
-    return `${from}<span class="now ${anySale?'':'nodeal'}">${fmt(mn)}</span>`;
+    return `${from}<span class="now ${hasSale?'':'nodeal'}">${fmt(mn)}</span>${hasSale?`<span class="old">${fmt(cheapest.price)}</span>`:''}`;
   }
   const hasSale=p.salePrice&&p.salePrice<p.price;
   return `<span class="now ${hasSale?'':'nodeal'}">${fmt(sellPrice(p))}</span>${hasSale?`<span class="old">${fmt(p.price)}</span>`:''}`;
