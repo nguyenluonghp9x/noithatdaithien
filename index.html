@@ -975,6 +975,7 @@ const saveO=()=>DB.set('dt:orders',orders);
 const saveStaff=()=>DB.set('dt:staff',staff);
 const saveCus=()=>DB.set('dt:customers',customers);
 /* ---- Danh bạ khách hàng: sửa ở đây thì mọi đơn cũ hiện theo thông tin mới ---- */
+function noAccent(s){return (s||'').toString().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').trim();}
 function phoneKey(p){return (p||'').replace(/\D/g,'');}
 function nameKey(n){return (n||'').trim().toLowerCase().replace(/\s+/g,' ');}
 // nhận diện khách: ưu tiên SĐT, không có thì theo TÊN
@@ -2237,7 +2238,8 @@ function bindCatMgr(){
   });}
 function renderKho(){
   const stockVal=products.reduce((s,p)=>s+p.stock*p.cost,0);
-  const list=products.filter(p=>!khoSearch||(p.name+p.sku+prodCats(p).join(' ')).toLowerCase().includes(khoSearch.toLowerCase()));
+  const kq=noAccent(khoSearch);
+  const list=products.filter(p=>!kq||noAccent(p.name+' '+(p.sku||'')+' '+prodCats(p).join(' ')).includes(kq));
   const showCost=can('view_cost');
   $('#view').innerHTML=`<h2>Kho & sản phẩm</h2>
     <div class="card" style="margin-bottom:18px"><div class="sectitle"><h3 style="margin:0">Quản lý danh mục (${cats.length})</h3>
@@ -2284,7 +2286,8 @@ function renderKho(){
     <div class="card">
       <div class="sectitle"><h3 style="margin:0">Danh sách (${products.length}) · Giá trị tồn: ${fmt(stockVal)}</h3>
         <div style="display:flex;gap:8px;align-items:center"><button class="btn sm alt" id="kImport" title="Nhập nhiều sản phẩm từ file .json (gộp theo mã SP)">⬆ Nhập sản phẩm</button>
-        <input id="kSearch" placeholder="Tìm trong kho..." style="max-width:200px" value="${esc(khoSearch)}"></div></div>
+        <input id="kSearch" placeholder="Tìm mã / tên rồi Enter..." style="max-width:200px" value="${esc(khoSearch)}">
+        <button class="btn sm" id="kSearchBtn">🔍 Tìm</button>${khoSearch?`<button class="btn sm alt" id="kSearchClear">✕</button>`:''}</div></div>
       <table><thead><tr><th>Mã</th><th>Tên</th><th>Danh mục</th><th class="num">Tồn</th>${showCost?'<th class="num">Giá vốn</th>':''}<th class="num">Giá niêm yết</th><th></th></tr></thead><tbody>
       ${list.map(p=>`<tr class="${p.stock<=p.min?'low':''}"><td>${esc(p.sku||'—')}</td><td>${esc(p.name)}</td><td>${esc(prodCats(p).join(', ')||'—')}</td>
         <td class="num">${p.stock} ${esc(p.unit||'')}</td>${showCost?`<td class="num">${fmt(p.cost)}</td>`:''}
@@ -2297,7 +2300,11 @@ function renderKho(){
   const kvg=$('#kVarGen');if(kvg)kvg.onclick=()=>{collectKVars();renderKVar();};
   renderCatMgr();bindCatMgr();
   const kca=$('#kCatAdd');if(kca)kca.onclick=async()=>{const n=await uiPrompt({title:'Danh mục mới',label:'Tên danh mục',placeholder:'VD: Sofa, Bàn ăn, Tủ kệ...'});if(n&&n.trim()){const t=n.trim();if(!cats.includes(t)){cats.push(t);await saveCats();}const sel=kCatsVal();if(!sel.includes(t))sel.push(t);const box=$('#kCats');if(box)box.innerHTML=cats.map(c=>`<label class="catpick-item"><input type="checkbox" value="${esc(c)}" ${sel.includes(c)?'checked':''}><span>${esc(c)}</span></label>`).join('');}};
-  $('#kSearch').oninput=e=>{khoSearch=e.target.value;renderKho();};
+  {const inp=$('#kSearch');const doFind=()=>{khoSearch=inp.value.trim();renderKho();};
+   if(inp){inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();doFind();}};
+     const focusEnd=()=>{inp.focus();const v=inp.value;inp.value='';inp.value=v;};focusEnd();}
+   const bt=$('#kSearchBtn');if(bt)bt.onclick=doFind;
+   const cl=$('#kSearchClear');if(cl)cl.onclick=()=>{khoSearch='';renderKho();};}
   const kim=$('#kImport');if(kim)kim.onclick=()=>$('#fileProducts').click();
   $('#kSave').onclick=saveKho;
   $('#kClear').onclick=()=>{window._kImgs=[];clearK();renderKho();};
