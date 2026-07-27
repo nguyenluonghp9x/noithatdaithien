@@ -1177,7 +1177,7 @@ function renderShopNav(){
 }
 
 const ADMIN_TABS=[
-  ['don','Đơn hàng','view_orders'],['ban','Bán hàng','sell'],['khach','Khách hàng','view_orders'],['kho','Kho','edit_products'],['nhap','Nhập','stock'],['xuat','Xuất','stock'],
+  ['don','Đơn hàng','view_orders'],['ban','Bán hàng','sell'],['khach','Khách hàng','view_orders'],['kho','Kho','edit_products'],
   ['baocao','Báo cáo','view_reports'],['tag','In tag/QR','view_catalogue'],['giaodien','Giao diện','settings'],['nhanvien','Nhân viên','manage_staff'],['caidat','Cài đặt','settings']
 ];
 function renderTabs(){
@@ -1185,8 +1185,10 @@ function renderTabs(){
   if(area!=='admin'||!session.staff){sn.style.display='none';return;}
   sn.style.display='block';
   const allowed=ADMIN_TABS.filter(([,,p])=>can(p));
-  if(!allowed.find(t=>t[0]===tab))tab=allowed.length?allowed[0][0]:'';
-  $('#tabs').innerHTML=allowed.map(([k,l])=>{const pc=(k==='don')?pendCount():0;return `<button class="tab" data-t="${k}" aria-pressed="${k===tab}">${l}${pc?` <span style="background:var(--sale);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:800;vertical-align:1px">${pc}</span>`:''}</button>`;}).join('');
+  const SUBROUTES=['nhap','xuat'];// mở được từ trong Kho, không hiện ở thanh trên
+  if(!allowed.find(t=>t[0]===tab)&&!SUBROUTES.includes(tab))tab=allowed.length?allowed[0][0]:'';
+  const navActive=SUBROUTES.includes(tab)?'kho':tab;// đang ở Nhập/Xuất thì sáng nút Kho
+  $('#tabs').innerHTML=allowed.map(([k,l])=>{const pc=(k==='don')?pendCount():0;return `<button class="tab" data-t="${k}" aria-pressed="${k===navActive}">${l}${pc?` <span style="background:var(--sale);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:800;vertical-align:1px">${pc}</span>`:''}</button>`;}).join('');
   $('#tabs').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tab=b.dataset.t;pushURL();renderTabs();renderView();window.scrollTo(0,0);});
 }
 
@@ -2233,7 +2235,7 @@ async function renderKhach(){
 }
 
 /* ====================== QUẢN TRỊ: KHO ====================== */
-let khoSearch='', khoView='list', khoCat='__all', khoStock='all', khoSort='moi';
+let khoSearch='', khoView='list', khoCat='__all', khoStock='all', khoSort='moi', khoEditing=false;
 function khoList(){
   const kq=noAccent(khoSearch);
   const price=p=>(p.salePrice&&p.salePrice<p.price)?p.salePrice:p.price;
@@ -2276,14 +2278,14 @@ function renderKho(){
   const stockVal=products.reduce((s,p)=>s+p.stock*p.cost,0);
   const showCost=can('view_cost');
   const list=khoList();
-  const NAV=[['list','📋 Danh sách'],['add','➕ Thêm / sửa SP'],['cats','🏷️ Danh mục'],['nhap','⬇ Nhập kho'],['xuat','⬆ Xuất kho']];
+  const NAV=[['list','📋 Danh sách'],['add','➕ Thêm sản phẩm'],['cats','🏷️ Danh mục'],['nhap','⬇ Nhập kho'],['xuat','⬆ Xuất kho']];
   $('#view').innerHTML=`<h2>Kho & sản phẩm</h2>
     <div class="khonav">${NAV.map(([k,l])=>`<button class="khonav-b${khoView===k?' on':''}" data-kv="${k}">${l}</button>`).join('')}</div>
     ${khoView==='cats'?`<div class="card"><div class="sectitle"><h3 style="margin:0">Quản lý danh mục (${cats.length})</h3>
       <button class="btn sm alt" id="catMgrAdd">+ Thêm danh mục</button></div>
       <p class="hint" style="margin:0 0 10px">Sửa tên, xóa, đổi thứ tự hiển thị. Đổi tên sẽ áp cho mọi sản phẩm đang dùng. Danh mục trống tự ẩn trên trang khách.</p>
       <div id="catMgrList"></div></div>`:''}
-    ${khoView==='add'?`<div class="card"><h3>Thêm / sửa sản phẩm</h3>
+    ${khoView==='add'?`<div class="card"><h3>${khoEditing?'Sửa sản phẩm':'Thêm sản phẩm'}</h3>
       <input type="hidden" id="kId">
       <div class="row"><div style="flex:0 0 130px"><label>Mã SP</label><input id="kSku"></div><div style="flex:2"><label>Tên sản phẩm *</label><input id="kName"></div><div style="flex:0 0 110px"><label>ĐVT</label><input id="kUnit" placeholder="cái/bộ"></div></div>
       <div style="margin-top:10px"><label>Danh mục <span class="muted" style="font-weight:400">(chọn 1 hoặc nhiều — 1 SP có thể thuộc nhiều nhóm)</span></label>${catMultiHTML([])}</div>
@@ -2338,6 +2340,7 @@ function renderKho(){
   // menu con
   $('#view').querySelectorAll('[data-kv]').forEach(b=>b.onclick=()=>{const v=b.dataset.kv;
     if(v==='nhap'||v==='xuat'){tab=v;pushURL();renderTabs();renderView();window.scrollTo(0,0);return;}
+    if(v==='add'){khoEditing=false;window._kImgs=[];}// bấm "Thêm sản phẩm" = form trống
     khoView=v;renderKho();window.scrollTo(0,0);});
   if(khoView==='add'){
     window._kImgs=window._kImgs||[];renderKGallery();
@@ -2435,8 +2438,8 @@ async function saveKho(){
   if(id){Object.assign(prod(id),data);}else{products.push({id:uid(),...data});}
   await saveP();window._kImgs=[];clearK();khoView='list';toast('Đã lưu');renderKho();
 }
-function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];
-  if(khoView!=='add'){khoView='add';renderKho();}  // mở form trước khi điền
+function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];khoEditing=true;
+  khoView='add';renderKho();  // mở form (chế độ Sửa) trước khi điền
   $('#kId').value=p.id;$('#kSku').value=p.sku||'';$('#kName').value=p.name;$('#kUnit').value=p.unit||'';
   setKCats(prodCats(p));$('#kColor').value=p.color||'';$('#kSizeOpts').value=p.sizeOpts||'';$('#kMaterial').value=p.material||'';$('#kSize').value=p.size||'';
   if($('#kCost'))$('#kCost').value=p.cost||'';$('#kPrice').value=p.price||'';$('#kSale').value=p.salePrice||'';
@@ -2445,7 +2448,7 @@ function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];
   window._kVars={};(p.variants||[]).forEach(v=>{window._kVars[kVarKey(v.c,v.s)]={c:v.c,s:v.s,sku:v.sku||'',price:v.price,sale:v.sale,stock:v.stock};});renderKVar();
   renderKGallery();window.scrollTo({top:0,behavior:'smooth'});}
 function setKCats(sel){sel=sel||[];const box=$('#kCats');if(box)box.innerHTML=cats.length?cats.map(c=>`<label class="catpick-item"><input type="checkbox" value="${esc(c)}" ${sel.includes(c)?'checked':''}><span>${esc(c)}</span></label>`).join(''):'<span class="muted" style="font-size:12.5px">Chưa có danh mục — bấm thêm bên dưới</span>';}
-function clearK(){['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';setKCats([]);if($('#kPremium'))$('#kPremium').checked=false;if($('#kHot'))$('#kHot').checked=false;if($('#kCustom'))$('#kCustom').checked=false;window._kVars={};if($('#kVarBody'))renderKVar();}
+function clearK(){khoEditing=false;['kId','kSku','kName','kUnit','kColor','kSizeOpts','kMaterial','kSize','kCost','kPrice','kSale','kStock','kDesc'].forEach(i=>{if($('#'+i))$('#'+i).value='';});if($('#kMin'))$('#kMin').value='2';setKCats([]);if($('#kPremium'))$('#kPremium').checked=false;if($('#kHot'))$('#kHot').checked=false;if($('#kCustom'))$('#kCustom').checked=false;window._kVars={};if($('#kVarBody'))renderKVar();}
 
 /* ====================== QUẢN TRỊ: NHẬP / XUẤT ====================== */
 function renderPhieu(type){
