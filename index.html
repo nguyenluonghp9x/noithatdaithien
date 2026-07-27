@@ -206,6 +206,16 @@
   .postot .r.grand span:last-child{color:var(--orange-d)}
   .postot .r.grand.remain span:last-child{color:var(--sale)}
   @media(max-width:760px){.bangrid{grid-template-columns:1fr}.pl-ctrl{grid-template-columns:1fr 1fr}}
+  /* ===== Menu con + bộ lọc Kho ===== */
+  .khonav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .khonav-b{border:1px solid var(--line2);background:#fff;border-radius:10px;padding:10px 16px;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+  .khonav-b:hover{border-color:var(--orange)}
+  .khonav-b.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .khofilter{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin:6px 0 16px;padding:12px;background:var(--cream);border-radius:10px}
+  .khofilter .f{display:flex;flex-direction:column;gap:4px}
+  .khofilter .f label{font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700}
+  .khofilter select,.khofilter input{border:1px solid var(--line2);border-radius:8px;padding:8px 10px;font-size:13.5px;background:#fff}
+  @media(max-width:640px){.khofilter .f{flex:1 1 45%}}
   /* ===== Khách hàng ===== */
   .khrow{border-bottom:1px solid var(--line);padding:12px 0}
   .khrow:last-child{border-bottom:0}
@@ -2223,7 +2233,22 @@ async function renderKhach(){
 }
 
 /* ====================== QUẢN TRỊ: KHO ====================== */
-let khoSearch='';
+let khoSearch='', khoView='list', khoCat='__all', khoStock='all', khoSort='moi';
+function khoList(){
+  const kq=noAccent(khoSearch);
+  const price=p=>(p.salePrice&&p.salePrice<p.price)?p.salePrice:p.price;
+  let l=products.map((p,idx)=>({p,idx}));
+  if(khoCat==='__none')l=l.filter(o=>!prodCats(o.p).length);
+  else if(khoCat!=='__all')l=l.filter(o=>prodCats(o.p).includes(khoCat));
+  if(khoStock==='con')l=l.filter(o=>o.p.stock>(o.p.min||0));
+  else if(khoStock==='sap')l=l.filter(o=>o.p.stock>0&&o.p.stock<=(o.p.min||0));
+  else if(khoStock==='het')l=l.filter(o=>o.p.stock<=0);
+  if(kq)l=l.filter(o=>noAccent(o.p.name+' '+(o.p.sku||'')+' '+prodCats(o.p).join(' ')).includes(kq));
+  const S={moi:(a,b)=>b.idx-a.idx,cu:(a,b)=>a.idx-b.idx,gia_cao:(a,b)=>price(b.p)-price(a.p),gia_thap:(a,b)=>price(a.p)-price(b.p),ton_it:(a,b)=>o1(a.p.stock)-o1(b.p.stock),ton_nhieu:(a,b)=>o1(b.p.stock)-o1(a.p.stock),ten:(a,b)=>(a.p.name||'').localeCompare(b.p.name||'','vi')};
+  function o1(n){return +n||0;}
+  l.sort(S[khoSort]||S.moi);
+  return l.map(o=>o.p);
+}
 function catSelect(sel){return `<option value="">— Chưa phân loại —</option>`+cats.map(c=>`<option value="${esc(c)}" ${c===sel?'selected':''}>${esc(c)}</option>`).join('')+`<option value="__new">+ Danh mục mới...</option>`;}
 function catMultiHTML(sel){sel=sel||[];
   return `<div class="catpick" id="kCats">${cats.length?cats.map(c=>`<label class="catpick-item"><input type="checkbox" value="${esc(c)}" ${sel.includes(c)?'checked':''}><span>${esc(c)}</span></label>`).join(''):'<span class="muted" style="font-size:12.5px">Chưa có danh mục — bấm thêm bên dưới</span>'}</div>
@@ -2249,15 +2274,16 @@ function bindCatMgr(){
   });}
 function renderKho(){
   const stockVal=products.reduce((s,p)=>s+p.stock*p.cost,0);
-  const kq=noAccent(khoSearch);
-  const list=products.filter(p=>!kq||noAccent(p.name+' '+(p.sku||'')+' '+prodCats(p).join(' ')).includes(kq));
   const showCost=can('view_cost');
+  const list=khoList();
+  const NAV=[['list','📋 Danh sách'],['add','➕ Thêm / sửa SP'],['cats','🏷️ Danh mục'],['nhap','⬇ Nhập kho'],['xuat','⬆ Xuất kho']];
   $('#view').innerHTML=`<h2>Kho & sản phẩm</h2>
-    <div class="card" style="margin-bottom:18px"><div class="sectitle"><h3 style="margin:0">Quản lý danh mục (${cats.length})</h3>
+    <div class="khonav">${NAV.map(([k,l])=>`<button class="khonav-b${khoView===k?' on':''}" data-kv="${k}">${l}</button>`).join('')}</div>
+    ${khoView==='cats'?`<div class="card"><div class="sectitle"><h3 style="margin:0">Quản lý danh mục (${cats.length})</h3>
       <button class="btn sm alt" id="catMgrAdd">+ Thêm danh mục</button></div>
       <p class="hint" style="margin:0 0 10px">Sửa tên, xóa, đổi thứ tự hiển thị. Đổi tên sẽ áp cho mọi sản phẩm đang dùng. Danh mục trống tự ẩn trên trang khách.</p>
-      <div id="catMgrList"></div></div>
-    <div class="card" style="margin-bottom:18px"><h3>Thêm / sửa sản phẩm</h3>
+      <div id="catMgrList"></div></div>`:''}
+    ${khoView==='add'?`<div class="card"><h3>Thêm / sửa sản phẩm</h3>
       <input type="hidden" id="kId">
       <div class="row"><div style="flex:0 0 130px"><label>Mã SP</label><input id="kSku"></div><div style="flex:2"><label>Tên sản phẩm *</label><input id="kName"></div><div style="flex:0 0 110px"><label>ĐVT</label><input id="kUnit" placeholder="cái/bộ"></div></div>
       <div style="margin-top:10px"><label>Danh mục <span class="muted" style="font-weight:400">(chọn 1 hoặc nhiều — 1 SP có thể thuộc nhiều nhóm)</span></label>${catMultiHTML([])}</div>
@@ -2293,34 +2319,47 @@ function renderKho(){
       <div style="margin-top:10px"><label>Ảnh sản phẩm</label><div class="gallery" id="kGallery"></div>
         <label class="filebtn" style="margin-top:8px" for="fileGallery">+ Thêm ảnh</label></div>
       <div class="row" style="margin-top:14px"><button class="btn" id="kSave">Lưu sản phẩm</button><button class="btn alt" id="kClear" style="flex:0 0 120px">Làm mới</button></div>
-    </div>
-    <div class="card">
-      <div class="sectitle"><h3 style="margin:0">Danh sách (${products.length}) · Giá trị tồn: ${fmt(stockVal)}</h3>
-        <div style="display:flex;gap:8px;align-items:center"><button class="btn sm alt" id="kImport" title="Nhập nhiều sản phẩm từ file .json (gộp theo mã SP)">⬆ Nhập sản phẩm</button>
-        <input id="kSearch" placeholder="Tìm mã / tên rồi Enter..." style="max-width:200px" value="${esc(khoSearch)}">
-        <button class="btn sm" id="kSearchBtn">🔍 Tìm</button>${khoSearch?`<button class="btn sm alt" id="kSearchClear">✕</button>`:''}</div></div>
+    </div>`:''}
+    ${khoView==='list'?`<div class="card">
+      <div class="sectitle" style="align-items:center"><h3 style="margin:0">Danh sách (${list.length}/${products.length})${showCost?' · Giá trị tồn: '+fmt(stockVal):''}</h3>
+        <button class="btn sm alt" id="kImport" title="Nhập nhiều sản phẩm từ file .json">⬆ Nhập từ file</button></div>
+      <div class="khofilter">
+        <div class="f"><label>Danh mục</label><select id="fCat"><option value="__all"${khoCat==='__all'?' selected':''}>Tất cả danh mục</option>${cats.map(c=>`<option value="${esc(c)}"${khoCat===c?' selected':''}>${esc(c)}</option>`).join('')}<option value="__none"${khoCat==='__none'?' selected':''}>Chưa phân loại</option></select></div>
+        <div class="f"><label>Tồn kho</label><select id="fStock">${[['all','Tất cả'],['con','Còn hàng'],['sap','Sắp hết'],['het','Hết hàng']].map(([v,t])=>`<option value="${v}"${khoStock===v?' selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="f"><label>Sắp xếp</label><select id="fSort">${[['moi','Mới nhất'],['cu','Cũ nhất'],['gia_cao','Giá cao → thấp'],['gia_thap','Giá thấp → cao'],['ton_it','Tồn ít → nhiều'],['ton_nhieu','Tồn nhiều → ít'],['ten','Tên A → Z']].map(([v,t])=>`<option value="${v}"${khoSort===v?' selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="f" style="flex:1;min-width:160px"><label>Tìm tên / mã</label><div style="display:flex;gap:6px"><input id="kSearch" placeholder="Gõ rồi Enter..." value="${esc(khoSearch)}"><button class="btn sm" id="kSearchBtn">🔍</button>${(khoSearch||khoCat!=='__all'||khoStock!=='all')?`<button class="btn sm alt" id="kFilterClear">✕ Bỏ lọc</button>`:''}</div></div>
+      </div>
       <table><thead><tr><th>Mã</th><th>Tên</th><th>Danh mục</th><th class="num">Tồn</th>${showCost?'<th class="num">Giá vốn</th>':''}<th class="num">Giá niêm yết</th><th></th></tr></thead><tbody>
       ${list.map(p=>`<tr class="${p.stock<=p.min?'low':''}"><td>${esc(p.sku||'—')}</td><td>${esc(p.name)}</td><td>${esc(prodCats(p).join(', ')||'—')}</td>
         <td class="num">${p.stock} ${esc(p.unit||'')}</td>${showCost?`<td class="num">${fmt(p.cost)}</td>`:''}
         <td class="num"><b>${fmt(p.price)}</b>${(p.salePrice&&p.salePrice<p.price)?`<div class="muted" style="font-size:11.5px">KM: ${fmt(p.salePrice)}</div>`:''}</td>
         <td class="right"><button class="btn sm alt" data-edit="${p.id}">Sửa</button> ${can('delete_products')?`<button class="btn sm danger" data-del="${p.id}">Xóa</button>`:''}</td></tr>`).join('')}
-      </tbody></table>${list.length?'':'<div class="empty">Không có sản phẩm.</div>'}</div>`;
-  // ảnh tạm cho form
-  window._kImgs=window._kImgs||[];renderKGallery();
-  window._kVars=window._kVars||{};renderKVar();
-  const kvg=$('#kVarGen');if(kvg)kvg.onclick=()=>{collectKVars();renderKVar();};
-  renderCatMgr();bindCatMgr();
-  const kca=$('#kCatAdd');if(kca)kca.onclick=async()=>{const n=await uiPrompt({title:'Danh mục mới',label:'Tên danh mục',placeholder:'VD: Sofa, Bàn ăn, Tủ kệ...'});if(n&&n.trim()){const t=n.trim();if(!cats.includes(t)){cats.push(t);await saveCats();}const sel=kCatsVal();if(!sel.includes(t))sel.push(t);const box=$('#kCats');if(box)box.innerHTML=cats.map(c=>`<label class="catpick-item"><input type="checkbox" value="${esc(c)}" ${sel.includes(c)?'checked':''}><span>${esc(c)}</span></label>`).join('');}};
-  {const inp=$('#kSearch');const doFind=()=>{khoSearch=inp.value.trim();renderKho();};
-   if(inp){inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();doFind();}};
-     const focusEnd=()=>{inp.focus();const v=inp.value;inp.value='';inp.value=v;};focusEnd();}
-   const bt=$('#kSearchBtn');if(bt)bt.onclick=doFind;
-   const cl=$('#kSearchClear');if(cl)cl.onclick=()=>{khoSearch='';renderKho();};}
-  const kim=$('#kImport');if(kim)kim.onclick=()=>$('#fileProducts').click();
-  $('#kSave').onclick=saveKho;
-  $('#kClear').onclick=()=>{window._kImgs=[];clearK();renderKho();};
-  $('#view').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editKho(b.dataset.edit));
-  $('#view').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('Xóa sản phẩm?','Hành động này không thể hoàn tác.')){products=products.filter(p=>p.id!==b.dataset.del);await saveP();renderKho();}});
+      </tbody></table>${list.length?'':'<div class="empty">Không có sản phẩm khớp bộ lọc.</div>'}</div>`:''}`;
+  // menu con
+  $('#view').querySelectorAll('[data-kv]').forEach(b=>b.onclick=()=>{const v=b.dataset.kv;
+    if(v==='nhap'||v==='xuat'){tab=v;pushURL();renderTabs();renderView();window.scrollTo(0,0);return;}
+    khoView=v;renderKho();window.scrollTo(0,0);});
+  if(khoView==='add'){
+    window._kImgs=window._kImgs||[];renderKGallery();
+    window._kVars=window._kVars||{};renderKVar();
+    const kvg=$('#kVarGen');if(kvg)kvg.onclick=()=>{collectKVars();renderKVar();};
+    const kca=$('#kCatAdd');if(kca)kca.onclick=async()=>{const n=await uiPrompt({title:'Danh mục mới',label:'Tên danh mục',placeholder:'VD: Sofa, Bàn ăn, Tủ kệ...'});if(n&&n.trim()){const t=n.trim();if(!cats.includes(t)){cats.push(t);await saveCats();}const sel=kCatsVal();if(!sel.includes(t))sel.push(t);const box=$('#kCats');if(box)box.innerHTML=cats.map(c=>`<label class="catpick-item"><input type="checkbox" value="${esc(c)}" ${sel.includes(c)?'checked':''}><span>${esc(c)}</span></label>`).join('');}};
+    const ks=$('#kSave');if(ks)ks.onclick=saveKho;
+    const kc=$('#kClear');if(kc)kc.onclick=()=>{window._kImgs=[];clearK();renderKho();};
+  }
+  if(khoView==='cats'){renderCatMgr();bindCatMgr();}
+  if(khoView==='list'){
+    const fc=$('#fCat');if(fc)fc.onchange=()=>{khoCat=fc.value;renderKho();};
+    const fs=$('#fStock');if(fs)fs.onchange=()=>{khoStock=fs.value;renderKho();};
+    const fo=$('#fSort');if(fo)fo.onchange=()=>{khoSort=fo.value;renderKho();};
+    const inp=$('#kSearch');const doFind=()=>{khoSearch=inp.value.trim();renderKho();};
+    if(inp){inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();doFind();}};const v=inp.value;inp.focus();inp.value='';inp.value=v;}
+    const bt=$('#kSearchBtn');if(bt)bt.onclick=doFind;
+    const cl=$('#kFilterClear');if(cl)cl.onclick=()=>{khoSearch='';khoCat='__all';khoStock='all';renderKho();};
+    const kim=$('#kImport');if(kim)kim.onclick=()=>$('#fileProducts').click();
+    $('#view').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editKho(b.dataset.edit));
+    $('#view').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{if(await uiConfirm('Xóa sản phẩm?','Hành động này không thể hoàn tác.')){products=products.filter(p=>p.id!==b.dataset.del);await saveP();renderKho();}});
+  }
 }
 function renderKGallery(){const g=$('#kGallery');if(!g)return;
   const imgs=window._kImgs||[];
@@ -2394,9 +2433,10 @@ async function saveKho(){
     stock:variants.length?variants.reduce((s,v)=>s+(+v.stock||0),0):num($('#kStock').value),min:num($('#kMin').value),
     desc:$('#kDesc').value.trim(),images:[...(window._kImgs||[])],variants};
   if(id){Object.assign(prod(id),data);}else{products.push({id:uid(),...data});}
-  await saveP();window._kImgs=[];clearK();toast('Đã lưu');renderKho();
+  await saveP();window._kImgs=[];clearK();khoView='list';toast('Đã lưu');renderKho();
 }
 function editKho(id){const p=prod(id);window._kImgs=[...(p.images||[])];
+  if(khoView!=='add'){khoView='add';renderKho();}  // mở form trước khi điền
   $('#kId').value=p.id;$('#kSku').value=p.sku||'';$('#kName').value=p.name;$('#kUnit').value=p.unit||'';
   setKCats(prodCats(p));$('#kColor').value=p.color||'';$('#kSizeOpts').value=p.sizeOpts||'';$('#kMaterial').value=p.material||'';$('#kSize').value=p.size||'';
   if($('#kCost'))$('#kCost').value=p.cost||'';$('#kPrice').value=p.price||'';$('#kSale').value=p.salePrice||'';
