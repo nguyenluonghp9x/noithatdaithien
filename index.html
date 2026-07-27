@@ -19,7 +19,18 @@
 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Nội Thất Đại Thiên</title>
+<title>Nội Thất Đại Thiên — Nội thất giá tốt tại Hải Phòng</title>
+<meta name="description" content="Nội Thất Đại Thiên — cửa hàng nội thất tại 590 Thiên Lôi, An Biên, Hải Phòng. Giường, tủ quần áo, bàn ghế, kệ trang trí... giao lắp tận nơi, bảo hành dài hạn.">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#D2661F">
+<link rel="canonical" href="https://noithatdaithien.vn/">
+<meta property="og:site_name" content="Nội Thất Đại Thiên">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="vi_VN">
+<meta property="og:title" content="Nội Thất Đại Thiên — Nội thất giá tốt tại Hải Phòng">
+<meta property="og:description" content="Cửa hàng nội thất tại Hải Phòng — giường, tủ, bàn ghế, kệ... giao lắp tận nơi, bảo hành dài hạn.">
+<meta property="og:url" content="https://noithatdaithien.vn/">
+<meta name="twitter:card" content="summary_large_image">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -308,7 +319,7 @@
   .searchbar{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--line2);border-radius:8px;padding:13px 17px;margin-bottom:20px;max-width:580px}
   .searchbar input{border:0;outline:0;padding:0;font-size:14.5px;width:100%;background:none}
   .catchips{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px}
-  .catchip{border:1px solid var(--line2);background:#fff;border-radius:6px;padding:9px 17px;font-weight:600;font-size:12.5px;cursor:pointer;color:var(--ink);transition:.15s}
+  .catchip{display:inline-block;text-decoration:none;border:1px solid var(--line2);background:#fff;border-radius:6px;padding:9px 17px;font-weight:600;font-size:12.5px;cursor:pointer;color:var(--ink);transition:.15s}
   .catchip:hover{border-color:var(--gold)}
   .catchip[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
 
@@ -322,7 +333,8 @@
   .soldout{position:absolute;inset:0;background:rgba(250,246,239,.7);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--ink);letter-spacing:.08em;text-transform:uppercase;font-size:13px}
   .pbody{padding:15px 16px 17px;display:flex;flex-direction:column;flex:1}
   .pcat{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-d);font-weight:700}
-  .pname{font-family:var(--disp);font-weight:600;font-size:16.5px;line-height:1.3;cursor:pointer;margin-top:5px;min-height:43px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .pname{font-family:var(--disp);font-weight:600;font-size:16.5px;line-height:1.3;cursor:pointer;margin-top:5px;min-height:43px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:inherit;text-decoration:none}
+  a.pname:hover{color:var(--orange-d)}
   .pprice{margin:10px 0 4px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
   .pprice .now{font-size:18.5px;font-weight:700;color:var(--sale);font-variant-numeric:tabular-nums}
   .pprice .now.nodeal{color:var(--ink)}
@@ -1031,19 +1043,51 @@ function applySEO(p){
     const url=base+'?p='+p.id;
     const title=p.name+' · '+(settings.shop||'Nội Thất Đại Thiên');
     const desc=(p.desc||(p.name+' - '+(prodCat(p)||'nội thất')+' chính hãng tại '+(settings.shop||'')+'. '+(settings.address||''))).replace(/\s+/g,' ').trim().slice(0,160);
+    setMeta('robots','index,follow');
     document.title=title;setMeta('description',desc);
     setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','product','property');setMeta('og:url',url,'property');setMeta('og:site_name',settings.shop,'property');
     if(p.images&&p.images[0])setMeta('og:image',p.images[0],'property');
     setMeta('twitter:card','summary_large_image');setLink('canonical',url);
     setJsonLd({"@context":"https://schema.org/","@type":"Product",name:p.name,image:(p.images||[]).slice(0,6),description:desc,sku:p.sku||undefined,category:prodCat(p)||undefined,brand:{"@type":"Brand",name:settings.shop},offers:{"@type":"Offer",url:url,priceCurrency:"VND",price:String(sellPrice(p)),availability:stockState(p).avail?"https://schema.org/InStock":"https://schema.org/OutOfStock",seller:{"@type":"Organization",name:settings.shop}}});
   }else{
-    const url=base;const title=settings.shop||'Nội Thất Đại Thiên';
-    const desc=((settings.slogan?settings.slogan+'. ':'')+(settings.note||'')+' '+(settings.address||'')).replace(/\s+/g,' ').trim().slice(0,160);
-    document.title=title;setMeta('description',desc);
-    setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','website','property');setMeta('og:url',url,'property');setMeta('og:site_name',settings.shop,'property');
-    if(settings.logo)setMeta('og:image',settings.logo,'property');
-    setMeta('twitter:card','summary');setLink('canonical',url);
-    setJsonLd({"@context":"https://schema.org","@type":"FurnitureStore",name:settings.shop,image:settings.logo||undefined,telephone:settings.phone,url:url,priceRange:"$$",address:{"@type":"PostalAddress",streetAddress:settings.address,addressLocality:"Hải Phòng",addressCountry:"VN"}});
+    const shop=settings.shop||'Nội Thất Đại Thiên';const addr=settings.address||'';
+    const storeLd=u=>({"@context":"https://schema.org","@type":"FurnitureStore",name:shop,image:settings.logo||undefined,telephone:settings.phone,url:u,priceRange:"$$",address:{"@type":"PostalAddress",streetAddress:addr,addressLocality:"Hải Phòng",addressCountry:"VN"}});
+    if(search){
+      // TRANG TÌM KIẾM — không cho index (tránh trang mỏng/trùng), vẫn cho bot đi tiếp link
+      const url=base+'?tim='+encodeURIComponent(search);
+      const title='Tìm "'+search+'" · '+shop;
+      const desc=('Kết quả tìm kiếm "'+search+'" tại '+shop+'. '+addr).replace(/\s+/g,' ').trim().slice(0,160);
+      setMeta('robots','noindex,follow');
+      document.title=title;setMeta('description',desc);
+      setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','website','property');setMeta('og:url',url,'property');setMeta('og:site_name',shop,'property');
+      if(settings.logo)setMeta('og:image',settings.logo,'property');
+      setMeta('twitter:card','summary');setLink('canonical',base);
+      setJsonLd(storeLd(base));
+    }else if(active&&active!=='__all'&&active!=='__none'){
+      // TRANG DANH MỤC — mỗi danh mục 1 tiêu đề/mô tả riêng
+      const url=base+'?dm='+encodeURIComponent(active);
+      const title=active+' · '+shop;
+      const list=products.filter(x=>prodCats(x).includes(active));
+      const desc=('Mua '+active+' chính hãng tại '+shop+(addr?', '+addr:'')+'. '+(list.length?list.length+' mẫu, ':'')+'giao lắp tận nơi, bảo hành dài hạn.').replace(/\s+/g,' ').trim().slice(0,160);
+      setMeta('robots','index,follow');
+      document.title=title;setMeta('description',desc);
+      setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','website','property');setMeta('og:url',url,'property');setMeta('og:site_name',shop,'property');
+      const wImg=(list.find(x=>x.images&&x.images[0])||{}).images;
+      setMeta('og:image',(wImg&&wImg[0])||settings.logo||'','property');
+      setMeta('twitter:card','summary_large_image');setLink('canonical',url);
+      setJsonLd({"@context":"https://schema.org","@type":"CollectionPage",name:title,url:url,about:{"@type":"Organization",name:shop},
+        mainEntity:{"@type":"ItemList",numberOfItems:list.length,itemListElement:list.slice(0,24).map((x,i)=>({"@type":"ListItem",position:i+1,url:base+'?p='+x.id,name:x.name}))}});
+    }else{
+      // TRANG CHỦ
+      const url=base;const title=shop;
+      const desc=((settings.slogan?settings.slogan+'. ':'')+(settings.note||'')+' '+addr).replace(/\s+/g,' ').trim().slice(0,160);
+      setMeta('robots','index,follow');
+      document.title=title;setMeta('description',desc);
+      setMeta('og:title',title,'property');setMeta('og:description',desc,'property');setMeta('og:type','website','property');setMeta('og:url',url,'property');setMeta('og:site_name',shop,'property');
+      if(settings.logo)setMeta('og:image',settings.logo,'property');
+      setMeta('twitter:card','summary');setLink('canonical',url);
+      setJsonLd(storeLd(url));
+    }
   }
 }
 /* ====================== TRACKING (Google / GTM / Facebook / TikTok / mã tùy chỉnh) ====================== */
@@ -1071,7 +1115,7 @@ function renderBrand(){
   $('#annbar').style.display=(a.show===false)?'none':'';
   $('#annbar').innerHTML=`<div class="in"><span style="display:inline-flex;align-items:center;gap:7px;color:var(--gold)">${svgIcon('spark',13)}</span><span>${esc(a.text||'')}</span>${settings.phone?`<span style="display:inline-flex;align-items:center;gap:6px">${svgIcon('phone',13)} Hotline/Zalo: <b>${esc(settings.phone)}</b></span>`:''}</div>`;
   $('#footer').innerHTML=footerHTML();
-  $('#footer').querySelectorAll('[data-fcat]').forEach(a=>a.onclick=()=>{area='shop';document.querySelectorAll('.area').forEach(x=>x.setAttribute('aria-pressed',x.dataset.area==='shop'));active=a.dataset.fcat;renderTopAct();renderTabs();renderView();window.scrollTo({top:0,behavior:'smooth'});});
+  $('#footer').querySelectorAll('[data-fcat]').forEach(a=>a.onclick=e=>{e.preventDefault();area='shop';search='';document.querySelectorAll('.area').forEach(x=>x.setAttribute('aria-pressed',x.dataset.area==='shop'));active=a.dataset.fcat;pushURL();renderTopAct();renderTabs();renderView();window.scrollTo({top:0,behavior:'smooth'});});
   if(typeof renderShopNav==='function')renderShopNav();
 }
 function footerHTML(){
@@ -1085,7 +1129,7 @@ function footerHTML(){
       <p style="margin-top:10px">${esc(f.about||settings.note||'')}</p>
       <p style="margin-top:6px;display:flex;gap:7px">${svgIcon('pin',15)} ${esc(settings.address||'')}</p>
       <div class="social">${soc}</div></div>
-    <div><h5>Danh mục</h5>${cats.slice(0,7).map(c=>`<a data-fcat="${esc(c)}">${esc(c)}</a>`).join('')||'<p>—</p>'}</div>
+    <div><h5>Danh mục</h5>${cats.slice(0,7).map(c=>`<a href="?dm=${encodeURIComponent(c)}" data-fcat="${esc(c)}">${esc(c)}</a>`).join('')||'<p>—</p>'}</div>
     <div><h5>Chính sách</h5>${pol.map(p=>`<a>${esc(p)}</a>`).join('')||'<p>—</p>'}</div>
     <div><h5>Liên hệ &amp; hỗ trợ</h5>${settings.phone?`<a href="${telLink()}" style="display:flex;gap:8px;align-items:center">${svgIcon('phone',15)} ${esc(settings.phone)}</a>`:''}<a href="${zaloLink()}" target="_blank" style="display:flex;gap:8px;align-items:center">${svgIcon('chat',15)} Chat Zalo</a>${f.email?`<a style="display:flex;gap:8px;align-items:center">${svgIcon('mail',15)} ${esc(f.email)}</a>`:''}${f.hours?`<p style="margin-top:8px;display:flex;gap:8px;align-items:center">${svgIcon('clock',15)} ${esc(f.hours)}</p>`:''}</div>
   </div>
@@ -1166,9 +1210,9 @@ function navToCat(cat){area='shop';productPageId=null;active=cat;search='';['#hS
 function renderShopNav(){
   const m=$('#navProdMenu');
   if(m){const c=catCounts();const list=cats.filter(x=>(c[x]||0)>0);
-    m.innerHTML=`<a data-cat="__all">Tất cả sản phẩm<span class="ct">${(typeof products!=='undefined')?products.length:''}</span></a>`+
-      list.map(x=>`<a data-cat="${esc(x)}">${esc(x)}<span class="ct">${c[x]||0}</span></a>`).join('');
-    m.querySelectorAll('[data-cat]').forEach(a=>a.onclick=()=>navToCat(a.dataset.cat));}
+    m.innerHTML=`<a href="?" data-cat="__all">Tất cả sản phẩm<span class="ct">${(typeof products!=='undefined')?products.length:''}</span></a>`+
+      list.map(x=>`<a href="?dm=${encodeURIComponent(x)}" data-cat="${esc(x)}">${esc(x)}<span class="ct">${c[x]||0}</span></a>`).join('');
+    m.querySelectorAll('[data-cat]').forEach(a=>a.onclick=e=>{e.preventDefault();navToCat(a.dataset.cat);});}
   const pb=$('#navProdBtn');if(pb)pb.onclick=()=>navToCat('__all');
   const allb=document.querySelector('#shopnav [data-nav="all"]');if(allb)allb.onclick=()=>navToCat('__all');
   const sr=$('#navShowroom');if(sr){sr.href=(settings.address||settings.map)?mapDir():'#';sr.target='_blank';sr.style.display=(settings.address||settings.map)?'':'none';}
@@ -1389,7 +1433,7 @@ function shopCard(p){
       </div></div>
     <div class="pbody">
       <div class="pcat">${esc(prodCat(p)||'Nội thất')}</div>
-      <div class="pname" data-detail>${esc(p.name)}</div>
+      <a class="pname" href="?p=${encodeURIComponent(p.id)}" data-detail>${esc(p.name)}</a>
       ${prodBadges(p)}
       <div class="pprice">${priceHTML(p)}</div>
       <div class="psold">${sold?'Đã bán '+sold:(st.avail?'Còn hàng':'')}</div>
@@ -1482,9 +1526,9 @@ function renderShop(){
   const list=shopFiltered();
   html+=`<div class="sec">
     <div class="searchbar"><span style="color:var(--muted);display:flex">${svgIcon('search',18)}</span><input id="q" placeholder="Tìm sản phẩm, mã SP..." value="${esc(search)}"></div>
-    <div class="catchips"><button class="catchip" data-c="__all" aria-pressed="${active==='__all'}">Tất cả</button>
-      ${cats.filter(x=>(c[x]||0)>0).map(x=>`<button class="catchip" data-c="${esc(x)}" aria-pressed="${active===x}">${esc(x)}</button>`).join('')}
-      ${c.__none?`<button class="catchip" data-c="__none" aria-pressed="${active==='__none'}">Khác</button>`:''}</div>
+    <div class="catchips"><a class="catchip" href="?" data-c="__all" aria-pressed="${active==='__all'}">Tất cả</a>
+      ${cats.filter(x=>(c[x]||0)>0).map(x=>`<a class="catchip" href="?dm=${encodeURIComponent(x)}" data-c="${esc(x)}" aria-pressed="${active===x}">${esc(x)}</a>`).join('')}
+      ${c.__none?`<a class="catchip" href="?dm=__none" data-c="__none" aria-pressed="${active==='__none'}">Khác</a>`:''}</div>
     <div class="sechead"><h2><span class="bar"></span>${active==='__all'?'Tất cả sản phẩm':active==='__none'?'Chưa phân loại':esc(active)}</h2>
       <span class="muted">${list.length} sản phẩm</span></div>
     <div class="grid" id="grid"></div>
@@ -1493,14 +1537,14 @@ function renderShop(){
   $('#view').innerHTML=html;
   $('#grid').innerHTML=list.length?list.map(shopCard).join(''):`<div class="empty" style="grid-column:1/-1">Không có sản phẩm trong mục này.</div>`;
   $('#view').querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>{active=b.dataset.cat;pushURL();renderShop();window.scrollTo({top:0,behavior:'smooth'});});
-  $('#view').querySelectorAll('.catchip').forEach(b=>b.onclick=()=>{active=b.dataset.c;pushURL();renderShop();});
+  $('#view').querySelectorAll('.catchip').forEach(b=>b.onclick=e=>{e.preventDefault();active=b.dataset.c;pushURL();renderShop();});
   const q=$('#q');if(q)q.oninput=e=>{search=e.target.value.trim();const l=shopFiltered();$('#grid').innerHTML=l.length?l.map(shopCard).join(''):`<div class="empty" style="grid-column:1/-1">Không tìm thấy sản phẩm phù hợp.</div>`;bindShopCards();};
   $('#view').querySelectorAll('.heroShop').forEach(hb=>hb.onclick=()=>{const sb=$('#q')||$('#mSearch');if(sb){sb.scrollIntoView({behavior:'smooth',block:'center'});sb.focus();}});
   bindShopCards();
 }
 function bindShopCards(){
   $('#view').querySelectorAll('.pcard').forEach(card=>{const id=card.dataset.id;
-    card.querySelectorAll('[data-detail],[data-detail2]').forEach(el=>el.onclick=e=>{e.stopPropagation();goProduct(id);});
+    card.querySelectorAll('[data-detail],[data-detail2]').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();goProduct(id);});
     const q=card.querySelector('[data-quick]');if(q)q.onclick=e=>{e.stopPropagation();openDetail(id);};
     const add=card.querySelector('[data-add]');if(add)add.onclick=()=>{const p=prod(id);if(p&&hasVariants(p)){openDetail(id);return;}addToCart(id,1);openCart();};});
 }
