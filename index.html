@@ -17,6 +17,8 @@
   ║   (code đã tách sẵn ở đối tượng DB để dễ thay).                    ║
   ╚══════════════════════════════════════════════════════════════════╝
 -->
+<html lang="vi">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="google-site-verification" content="-iE1OEfoPr7w1AHQ6gSRd9VW29RgkSHKoAV6l1prny0" />
@@ -692,6 +694,8 @@
   /* override cuối cùng (thắng các rule nền đặt sau) cho đầu trang điện thoại */
   @media (max-width:640px){ body.shopping .annbar{display:none} .brand .bnames{display:none} .herowrap-d{display:none} .herowrap-m{display:block} }
 </style>
+</head>
+<body>
 
 <!-- ============ THANH THÔNG BÁO (chỉ khu cửa hàng) ============ -->
 <div class="annbar" id="annbar"></div>
@@ -3121,3 +3125,5 @@ $('#fileLogo').onchange=e=>{const f=e.target.files[0];if(!f)return;resizeImg(f,6
 /* ====================== KHỞI ĐỘNG ====================== */
 (async()=>{await DB.init();await load();applyURL();renderBrand();renderTopAct();renderTabs();renderView();injectTracking();subscribeRealtime();})();
 </script>
+</body>
+</html>
