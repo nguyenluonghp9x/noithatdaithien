@@ -1037,10 +1037,12 @@ function setFavicon(href){let l=document.querySelector('link[rel="icon"]');if(!l
 function setMeta(key,val,attr){attr=attr||'name';let el=document.head.querySelector('meta['+attr+'="'+key+'"]');if(!el){el=document.createElement('meta');el.setAttribute(attr,key);document.head.appendChild(el);}el.setAttribute('content',val||'');}
 function setLink(rel,href){let el=document.head.querySelector('link[rel="'+rel+'"]');if(!el){el=document.createElement('link');el.setAttribute('rel',rel);document.head.appendChild(el);}el.setAttribute('href',href);}
 function setJsonLd(obj){let el=document.getElementById('jsonld');if(!el){el=document.createElement('script');el.id='jsonld';el.type='application/ld+json';document.head.appendChild(el);}el.textContent=JSON.stringify(obj);}
+function catSlug(s){return (noAccent(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''))||'muc';}
 function applySEO(p){
   const base=location.origin+location.pathname;
   if(p){
-    const url=base+'?p='+p.id;
+    // canonical = URL tĩnh đẹp /sp/<id>/ (khớp trang prerender) — 1 địa chỉ chính thức duy nhất
+    const url=location.origin+'/sp/'+encodeURIComponent(p.id)+'/';
     const title=p.name+' · '+(settings.shop||'Nội Thất Đại Thiên');
     const desc=(p.desc||(p.name+' - '+(prodCat(p)||'nội thất')+' chính hãng tại '+(settings.shop||'')+'. '+(settings.address||''))).replace(/\s+/g,' ').trim().slice(0,160);
     setMeta('robots','index,follow');
@@ -1064,8 +1066,8 @@ function applySEO(p){
       setMeta('twitter:card','summary');setLink('canonical',base);
       setJsonLd(storeLd(base));
     }else if(active&&active!=='__all'&&active!=='__none'){
-      // TRANG DANH MỤC — mỗi danh mục 1 tiêu đề/mô tả riêng
-      const url=base+'?dm='+encodeURIComponent(active);
+      // TRANG DANH MỤC — mỗi danh mục 1 tiêu đề/mô tả riêng (canonical = /danh-muc/<slug>/)
+      const url=location.origin+'/danh-muc/'+catSlug(active)+'/';
       const title=active+' · '+shop;
       const list=products.filter(x=>prodCats(x).includes(active));
       const desc=('Mua '+active+' chính hãng tại '+shop+(addr?', '+addr:'')+'. '+(list.length?list.length+' mẫu, ':'')+'giao lắp tận nơi, bảo hành dài hạn.').replace(/\s+/g,' ').trim().slice(0,160);
@@ -1597,6 +1599,7 @@ function productView(p,mode){
       <div class="row" style="margin-top:14px">
         ${st.avail?`<button class="btn alt" id="dAdd" style="flex:1">${svgIcon('bag',16)} Thêm vào giỏ</button><button class="btn" id="dBuy" style="flex:1">Mua ngay</button>`:`<button class="btn alt" disabled style="flex:1">Hết hàng</button>`}
         <a class="btn" id="dZalo" href="${zaloLink()}" target="_blank" rel="noopener" style="flex:0 0 auto;background:var(--zalo);border-color:var(--zalo)">${svgIcon('chat',16)} Zalo</a>
+        <button class="btn alt" id="dShare" title="Chia sẻ / sao chép link sản phẩm" style="flex:0 0 auto">🔗 Chia sẻ</button>
       </div>
       <ul class="benefits">
         <li>${svgIcon('truck',16)} Miễn phí giao &amp; lắp đặt khu vực nội thành</li>
@@ -1670,6 +1673,12 @@ function renderProductPage(id){
   $('#cbHome').onclick=goShop;
   const cc=$('#cbCat');if(cc)cc.onclick=()=>{productPageId=null;active=prodCat(p);pushURL();renderView();window.scrollTo(0,0);};
   bindProductView(p);
+  const sh=$('#dShare');if(sh)sh.onclick=async()=>{
+    const url=location.origin+'/sp/'+encodeURIComponent(p.id)+'/';
+    try{if(navigator.share){await navigator.share({title:p.name,text:p.name,url});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+    try{await navigator.clipboard.writeText(url);toast('Đã sao chép link: '+url);}
+    catch(e){uiPrompt('Sao chép link để chia sẻ:',url);}
+  };
   const qv=$('#qVal');
   const qm=$('#qMinus');if(qm)qm.onclick=()=>{pgQty=Math.max(1,pgQty-1);qv.textContent=pgQty;};
   const qp=$('#qPlus');if(qp)qp.onclick=()=>{pgQty=pgQty+1;qv.textContent=pgQty;};
