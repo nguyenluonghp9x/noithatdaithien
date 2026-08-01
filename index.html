@@ -210,6 +210,7 @@
   .pl-f label{font-size:9.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);font-weight:700}
   .pl-f input{border:1px solid var(--line2);border-radius:7px;padding:8px;font-size:13px;width:100%;text-align:right;font-variant-numeric:tabular-nums;background:#fff}
   .pl-f input.pl-disc{text-align:left}
+  .pl-f input.pl-price-in{font-weight:600;color:var(--orange-d);border-color:var(--orange)}
   .pl-price{font-weight:600;font-size:14px;padding:8px 0;text-align:right;font-variant-numeric:tabular-nums}
   .pl-lt{font-weight:800;font-size:15px;padding:8px 0;text-align:right;font-variant-numeric:tabular-nums;color:var(--orange-d)}
   .posline .x{border:0;background:none;color:var(--sale);font-weight:800;cursor:pointer;font-size:20px;line-height:1;flex:none}
@@ -2059,8 +2060,12 @@ function prodOptions(){return products.map(p=>`<option value="${p.id}">${esc(p.n
 function lineDiscAmt(price,qty,disc){disc=(disc==null?'':disc).toString().trim();const base=price*qty;if(!disc)return 0;
   if(/%$/.test(disc)){const p=parseFloat(disc);return isNaN(p)?0:Math.round(base*Math.max(0,Math.min(100,p))/100);}
   return Math.min(base,Math.max(0,parseFloat(disc.replace(/[^\d.]/g,''))||0));}
-function lineBase(id){const p=prod(id);return sellPrice(p)*(+posCart[id].qty||0);}
-function lineNet(id){const p=prod(id),l=posCart[id];const price=sellPrice(p);return price*(+l.qty||0)-lineDiscAmt(price,+l.qty||0,l.disc);}
+// SP theo yêu cầu / theo m² → cho nhập đơn giá trực tiếp trên dòng bán
+function priceEditable(p){return !!(p&&(p.custom||allowDecQty(p)));}
+// Đơn giá dòng: ưu tiên giá nhập tay (nếu SP cho sửa giá), không thì giá niêm yết
+function linePrice(id){const p=prod(id),l=posCart[id];if(priceEditable(p)&&l&&l.price!=null&&l.price!==''){return Math.max(0,num(l.price));}return sellPrice(p);}
+function lineBase(id){return linePrice(id)*(+posCart[id].qty||0);}
+function lineNet(id){const l=posCart[id];const price=linePrice(id);return price*(+l.qty||0)-lineDiscAmt(price,+l.qty||0,l.disc);}
 function posSubtotal(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineBase(id),0);}
 function posLineDisc(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);}
 function posAfterLines(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineNet(id),0);}
@@ -2074,14 +2079,14 @@ function updatePosTotals(){
   set('#bTot',fmt(posTotal()));
   set('#bDep','-'+fmt(+posInfo.deposit||0));
   set('#bRemain',fmt(posRemain()));}
-function posLineHTML(id){const p=prod(id),l=posCart[id];const low=l.qty>p.stock;const price=sellPrice(p);const dec=allowDecQty(p);
+function posLineHTML(id){const p=prod(id),l=posCart[id];const low=l.qty>p.stock;const price=linePrice(id);const dec=allowDecQty(p);const pe=priceEditable(p);
   return `<div class="posline${low?' low':''}" data-id="${id}">
     <div class="pl-top">
       <div class="pl-name"><b>${esc(p.name)}</b> <span class="muted">${esc(p.sku||'—')} · tồn ${fmtQty(p.stock)}${p.unit?' '+esc(p.unit):''}${low?' ⚠ thiếu hàng':''}</span></div>
       <button class="x" data-x title="Bỏ khỏi đơn">×</button>
     </div>
     <div class="pl-ctrl">
-      <div class="pl-f"><label>Đơn giá${p.unit?'/'+esc(p.unit):''}</label><div class="pl-price">${fmt(price)}</div></div>
+      <div class="pl-f"><label>Đơn giá${p.unit?'/'+esc(p.unit):''}</label>${pe?`<input class="pl-price-in" inputmode="numeric" value="${l.price!=null&&l.price!==''?esc(l.price):(sellPrice(p)||'')}" placeholder="Nhập giá">`:`<div class="pl-price">${fmt(price)}</div>`}</div>
       <div class="pl-f"><label>SL${dec&&p.unit?' ('+esc(p.unit)+')':''}</label><input class="pl-qty" inputmode="${dec?'decimal':'numeric'}" value="${dec?fmtQty(l.qty):l.qty}"></div>
       <div class="pl-f"><label>Chiết khấu</label><input class="pl-disc" value="${esc(l.disc||'')}" placeholder="0 · 10% · 50000"></div>
       <div class="pl-f"><label>Thành tiền</label><div class="pl-lt" data-lt>${fmt(lineNet(id))}</div></div>
@@ -2142,10 +2147,10 @@ function bindPosInfo(){
   const d=$('#bDisc');if(d)d.oninput=()=>{posInfo.disc=Math.max(0,Math.min(posAfterLines(),num(d.value)));updatePosTotals();};
   const dep=$('#bDeposit');if(dep)dep.oninput=()=>{posInfo.deposit=Math.max(0,Math.min(posTotal(),num(dep.value)));updatePosTotals();};}
 function bindPosLines(){$('#bLines').querySelectorAll('.posline').forEach(row=>{const id=row.dataset.id;if(!posCart[id])return;
-  const qt=row.querySelector('.pl-qty'),dc=row.querySelector('.pl-disc'),lt=row.querySelector('[data-lt]');
-  const upd=()=>{posCart[id].qty=readQty(prod(id),qt.value);posCart[id].disc=dc.value;lt.textContent=fmt(lineNet(id));
+  const qt=row.querySelector('.pl-qty'),dc=row.querySelector('.pl-disc'),pr=row.querySelector('.pl-price-in'),lt=row.querySelector('[data-lt]');
+  const upd=()=>{posCart[id].qty=readQty(prod(id),qt.value);posCart[id].disc=dc.value;if(pr)posCart[id].price=pr.value;lt.textContent=fmt(lineNet(id));
     posInfo.disc=Math.min(+posInfo.disc||0,posAfterLines());posInfo.deposit=Math.min(+posInfo.deposit||0,posTotal());updatePosTotals();};
-  if(qt)qt.oninput=upd;if(dc)dc.oninput=upd;
+  if(qt)qt.oninput=upd;if(dc)dc.oninput=upd;if(pr)pr.oninput=upd;
   const x=row.querySelector('[data-x]');if(x)x.onclick=()=>{delete posCart[id];renderBan();};});}
 function renderBan(){
   const ids=Object.keys(posCart).filter(id=>prod(id));
@@ -2194,7 +2199,7 @@ async function completeSale(kind){
   kind=(kind==='dat')?'dat':'ban';
   const ids=Object.keys(posCart).filter(id=>prod(id));if(!ids.length){toast('Chưa có sản phẩm trong đơn');return;}
   if(kind==='ban'){for(const id of ids){if(posCart[id].qty>prod(id).stock){toast('Tồn không đủ: '+prod(id).name+' (còn '+prod(id).stock+'). Dùng "Lưu đơn đặt hàng" nếu giao sau.');return;}}}
-  const items=ids.map(id=>{const p=prod(id),list=sellPrice(p),qty=+posCart[id].qty,net=lineNet(id),eff=qty?Math.round(net/qty):list;
+  const items=ids.map(id=>{const p=prod(id),list=linePrice(id),qty=+posCart[id].qty,net=lineNet(id),eff=qty?Math.round(net/qty):list;
     return{id,sku:p.sku,name:p.name,qty,price:eff,listPrice:list,disc:list*qty-net,cost:p.cost};});
   const sub=ids.reduce((s,id)=>s+lineBase(id),0);
   const lineD=ids.reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);
