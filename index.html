@@ -768,7 +768,8 @@ const num=v=>{const n=parseInt(String(v).replace(/[^\d]/g,''),10);return isNaN(n
 const numDec=v=>{const m=String(v).replace(',','.').match(/\d+(?:\.\d+)?/);return m?parseFloat(m[0]):0;};
 const fmtQty=q=>{const n=Math.round((+q||0)*1000)/1000;return String(n).replace('.',',');};
 // SP bán theo diện tích/dài (đơn giá theo m²…) → cho nhập số lượng lẻ
-function allowDecQty(p){return !!(p&&(p.byArea|| /m²|m2|mét|met vuong/i.test(p.unit||'')));}
+// Nhận diện: cờ byArea | ĐVT là m²/mét | tên có "(M2)"/"(m²)" (có ngoặc — tránh nhầm "Giường 2m2")
+function allowDecQty(p){return !!(p&&(p.byArea|| /^\s*(m²|m2|mét|met)/i.test(p.unit||'') || /\(\s*m[²2]\s*\)/i.test(p.name||'')));}
 // Đọc SL từ ô nhập, tôn trọng loại SP (lẻ hay nguyên). Luôn parse thập phân để "1,62" KHÔNG bao giờ thành 162.
 function readQty(p,val){const q=numDec(val);return allowDecQty(p)?Math.max(0,q):Math.max(1,Math.round(q));}
 // Làm tròn tiền về hàng chục (đồng) cho tổng đơn
