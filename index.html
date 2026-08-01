@@ -769,8 +769,10 @@ const numDec=v=>{const m=String(v).replace(',','.').match(/\d+(?:\.\d+)?/);retur
 const fmtQty=q=>{const n=Math.round((+q||0)*1000)/1000;return String(n).replace('.',',');};
 // SP bán theo diện tích/dài (đơn giá theo m²…) → cho nhập số lượng lẻ
 function allowDecQty(p){return !!(p&&(p.byArea|| /m²|m2|mét|met vuong/i.test(p.unit||'')));}
-// Đọc SL từ ô nhập, tôn trọng loại SP (lẻ hay nguyên)
-function readQty(p,val){return allowDecQty(p)?Math.max(0,numDec(val)):Math.max(1,num(val));}
+// Đọc SL từ ô nhập, tôn trọng loại SP (lẻ hay nguyên). Luôn parse thập phân để "1,62" KHÔNG bao giờ thành 162.
+function readQty(p,val){const q=numDec(val);return allowDecQty(p)?Math.max(0,q):Math.max(1,Math.round(q));}
+// Làm tròn tiền về hàng chục (đồng) cho tổng đơn
+const round10=n=>Math.round((+n||0)/10)*10;
 const initials=s=>((s||'?').trim().split(/\s+/)[0]||'?').slice(0,1).toUpperCase();
 const brandMark=s=>{const w=(s||'').trim().split(/\s+/).filter(Boolean);if(!w.length)return 'ĐT';return w.slice(-2).map(x=>x[0]).join('').toUpperCase();};
 const noDia=s=>(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/gi,'d');
@@ -1949,7 +1951,7 @@ function eoLineNet(l){return Math.max(0,l.price*l.qty-lineDiscAmt(l.price,l.qty,
 function eoSub(){return eoLines.reduce((s,l)=>s+l.price*l.qty,0);}
 function eoLineDiscTotal(){return eoLines.reduce((s,l)=>s+(l.price*l.qty-eoLineNet(l)),0);}
 function eoAfter(){return eoLines.reduce((s,l)=>s+eoLineNet(l),0);}
-function eoTotal(){return Math.max(0,eoAfter()-(+eoDisc||0));}
+function eoTotal(){return round10(Math.max(0,eoAfter()-(+eoDisc||0)));}
 function eoRemain(){return Math.max(0,eoTotal()-(+eoDeposit||0));}
 function editOrder(id){
   const no=donAll.find(o=>o.id===id);if(!no)return;
@@ -2023,7 +2025,7 @@ async function eoSave(){
     return{id:l.id,sku:l.sku,name:l.name,qty:l.qty,price:eff,listPrice:l.price,disc:l.price*l.qty-net,cost:p.cost};});
   const sub=eoSub(),lineD=eoLineDiscTotal(),after=eoAfter();
   const disc=Math.max(0,Math.min(after,+eoDisc||0));
-  const total=after-disc, deposit=Math.max(0,Math.min(total,+eoDeposit||0));
+  const total=round10(after-disc), deposit=Math.max(0,Math.min(total,+eoDeposit||0));
   // Đơn đã trừ kho -> điều chỉnh chênh lệch (đổi/trả hàng)
   if(no.stockDone){
     const oldQ={},newQ={};
@@ -2061,7 +2063,7 @@ function lineNet(id){const p=prod(id),l=posCart[id];const price=sellPrice(p);ret
 function posSubtotal(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineBase(id),0);}
 function posLineDisc(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);}
 function posAfterLines(){return Object.keys(posCart).filter(id=>prod(id)).reduce((s,id)=>s+lineNet(id),0);}
-function posTotal(){return Math.max(0,posAfterLines()-(+posInfo.disc||0));}
+function posTotal(){return round10(Math.max(0,posAfterLines()-(+posInfo.disc||0)));}
 function posRemain(){return Math.max(0,posTotal()-(+posInfo.deposit||0));}
 function updatePosTotals(){
   const set=(id,v)=>{const e=$(id);if(e)e.textContent=v;};
@@ -2197,7 +2199,7 @@ async function completeSale(kind){
   const lineD=ids.reduce((s,id)=>s+(lineBase(id)-lineNet(id)),0);
   const afterLines=sub-lineD;
   const orderDisc=Math.max(0,Math.min(afterLines,+posInfo.disc||0));
-  const total=afterLines-orderDisc;
+  const total=round10(afterLines-orderDisc);// làm tròn tổng về hàng chục
   const deposit=Math.max(0,Math.min(total,+posInfo.deposit||0));
   const cus=[posInfo.name,posInfo.phone].filter(Boolean).join(' · ');
   const v={id:uid(),code:(kind==='dat'?'DH':'XB')+Date.now().toString().slice(-7),type:'ban',status:kind==='dat'?'cho':'xong',src:'quay',date:new Date().toISOString(),
