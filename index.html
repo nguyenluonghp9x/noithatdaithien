@@ -33,7 +33,13 @@
 <meta property="og:title" content="Nội Thất Đại Thiên — Nội thất giá tốt tại Hải Phòng">
 <meta property="og:description" content="Cửa hàng nội thất tại Hải Phòng — giường, tủ, bàn ghế, kệ... giao lắp tận nơi, bảo hành dài hạn.">
 <meta property="og:url" content="https://noithatdaithien.vn/">
+<meta property="og:image" content="https://xviquvravscpionqundn.supabase.co/storage/v1/object/public/img/s/1.jpg">
+<meta property="og:image:secure_url" content="https://xviquvravscpionqundn.supabase.co/storage/v1/object/public/img/s/1.jpg">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="679">
+<meta property="og:image:alt" content="Nội Thất Đại Thiên">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://xviquvravscpionqundn.supabase.co/storage/v1/object/public/img/s/1.jpg">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2198,7 +2204,9 @@ function renderBan(){
 async function completeSale(kind){
   kind=(kind==='dat')?'dat':'ban';
   const ids=Object.keys(posCart).filter(id=>prod(id));if(!ids.length){toast('Chưa có sản phẩm trong đơn');return;}
-  if(kind==='ban'){for(const id of ids){if(posCart[id].qty>prod(id).stock){toast('Tồn không đủ: '+prod(id).name+' (còn '+prod(id).stock+'). Dùng "Lưu đơn đặt hàng" nếu giao sau.');return;}}}
+  if(kind==='ban'){const short=ids.filter(id=>posCart[id].qty>prod(id).stock);
+    if(short.length){const msg=short.map(id=>'• '+prod(id).name+' (còn '+fmtQty(prod(id).stock)+(prod(id).unit?' '+prod(id).unit:'')+')').join('\n');
+      if(!await uiConfirm('Tồn không đủ — vẫn bán?','Kho các mặt hàng sau sẽ bị ÂM sau khi bán:\n'+msg,'Vẫn bán'))return;}}
   const items=ids.map(id=>{const p=prod(id),list=linePrice(id),qty=+posCart[id].qty,net=lineNet(id),eff=qty?Math.round(net/qty):list;
     return{id,sku:p.sku,name:p.name,qty,price:eff,listPrice:list,disc:list*qty-net,cost:p.cost};});
   const sub=ids.reduce((s,id)=>s+lineBase(id),0);
@@ -2553,7 +2561,9 @@ function renderPhieu(type){
 }
 async function savePhieu(type){
   if(!lines.length){toast('Chưa có dòng hàng');return;}const isN=type==='nhap';
-  if(!isN)for(const l of lines){if(l.qty>prod(l.id).stock){toast('Tồn không đủ: '+prod(l.id).name);return;}}
+  if(!isN){const short=lines.filter(l=>l.qty>prod(l.id).stock);
+    if(short.length){const msg=short.map(l=>'• '+prod(l.id).name+' (còn '+fmtQty(prod(l.id).stock)+(prod(l.id).unit?' '+prod(l.id).unit:'')+')').join('\n');
+      if(!await uiConfirm('Tồn không đủ — vẫn xuất?','Kho các mặt hàng sau sẽ bị ÂM sau khi xuất:\n'+msg,'Vẫn xuất'))return;}}
   lines.forEach(l=>{const p=prod(l.id);if(isN){p.stock+=l.qty;p.cost=l.price||p.cost;}else p.stock-=l.qty;});
   const total=lines.reduce((s,l)=>s+l.qty*l.price,0);
   const v={id:uid(),code:(isN?'PN':'PX')+Date.now().toString().slice(-7),type,date:new Date().toISOString(),
