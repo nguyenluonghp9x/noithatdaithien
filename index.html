@@ -1002,7 +1002,20 @@ async function load(){
     DB.get('dt:products'),DB.get('dt:cats'),DB.get('dt:vouchers'),DB.get('dt:orders'),
     DB.get('dt:staff'),DB.get('dt:customers'),DB.get('dt:settings'),
     DB.get('dt:cart'),DB.get('dt:cartvar'),DB.get('dt:buyer')]);
-  if(!prods){products=SAMPLE;cats=SAMPLE_CATS;await DB.set('dt:products',products);await DB.set('dt:cats',cats);}
+  if(!prods){
+    // dt:products rỗng: PHẢI phân biệt "lần đầu chạy THẬT" với "đọc lỗi/rớt mạng".
+    // Nếu không, khi đọc lỗi app sẽ ghi DEMO đè lên dữ liệu thật -> MẤT SẢN PHẨM (sự cố đã từng xảy ra).
+    let firstRun=true;
+    if(DB.supaOn&&DB.client()){
+      try{const{data,error}=await DB.client().from('kv').select('key').eq('key','dt:products').maybeSingle();
+        if(error)throw error; firstRun=!data;}            // đọc THÀNH CÔNG & không có dòng => đúng là lần đầu
+      catch(e){firstRun=false;window._loadFailed=true;    // đọc LỖI => TUYỆT ĐỐI không seed, không ghi đè
+        console.error('Không tải được dt:products — giữ nguyên máy chủ, KHÔNG ghi demo:',e);
+        setTimeout(()=>{try{alert('⚠ KHÔNG tải được dữ liệu sản phẩm (mạng/máy chủ).\nTrang đang ở CHẾ ĐỘ AN TOÀN — đã tạm khóa lưu để không làm mất dữ liệu.\nHãy kiểm tra mạng rồi TẢI LẠI trang (Ctrl+F5).');}catch(_){}} ,400);}
+    }
+    if(firstRun){products=SAMPLE;cats=SAMPLE_CATS;await DB.set('dt:products',products);await DB.set('dt:cats',cats);}
+    else{products=[];cats=cts||[];}
+  }
   else{products=prods;cats=cts||[];}
   vouchers=vs||[];orders=os||[];staff=st||[];customers=cu||[];
   applySettings(setg);
@@ -1012,8 +1025,10 @@ async function load(){
   // Tài khoản dùng Supabase Auth (email+mật khẩu). Chủ tự tạo ở màn hình đăng nhập lần đầu.
   await restoreSession();
 }
-const saveP=()=>DB.set('dt:products',products);
-const saveCats=()=>DB.set('dt:cats',cats);
+// Chốt chặn: nếu lần tải trang bị lỗi (chưa có dữ liệu thật), KHÓA lưu products/cats để không ghi đè máy chủ.
+const saveBlocked=()=>{if(window._loadFailed){try{toast('⚠ Chưa tải được dữ liệu — đã khóa lưu để tránh mất sản phẩm. Hãy tải lại trang (Ctrl+F5).');}catch(_){}return true;}return false;};
+const saveP=()=>saveBlocked()?Promise.resolve():DB.set('dt:products',products);
+const saveCats=()=>saveBlocked()?Promise.resolve():DB.set('dt:cats',cats);
 const saveV=()=>DB.set('dt:vouchers',vouchers);
 const saveO=()=>DB.set('dt:orders',orders);
 const saveStaff=()=>DB.set('dt:staff',staff);
